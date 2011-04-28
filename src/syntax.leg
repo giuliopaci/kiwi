@@ -30,8 +30,8 @@ heading_text = < ( !heading_marker ( formatting | link | anything_else ) )* >
 heading_marker = < '=' '='+ >                                                  { if(current_header_level == 0) current_header_level = (yyleng > 5) ? 5 : yyleng; }
 
 # Paragraph
-paragraph = wikitext eol eol                                                   { bprintf("</p>\n<p>"); }
-horizontal_line = "----" ( eol | eof )                                         { bprintf("<hr/>\n"); }
+paragraph = wikitext eol eol+                                                  { bprintf("</p>\n<p>"); }
+horizontal_line = &{ start_of_line } "----" "-"*                               { bprintf("<hr/>\n"); start_of_line = 0; }
 
 # Lists
 list = &{ start_of_line } ( bullet_list | numbered_list | definition_list )
