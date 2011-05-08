@@ -185,9 +185,13 @@ simple_header = &{start_of_line} '!' space*                                    {
 template = &{!template_noinclude} template_open space* template_name template_content? template_close
 template_open = '{{'                                                           { kw_list_append_new(&template_list); }
 template_name = < ( !template_close !'|' . )* >                                { RUN_ACTION(template_name_action_1); }
-template_content = '|' space* < ( !template_close . )+ >                       { RUN_ACTION(template_content_action_1); }
+template_content = '|' space* < ( !template_close template_nested? . )+ >      { RUN_ACTION(template_content_action_1); }
 template_close = '}}'                                                          { RUN_ACTION(template_close_action_1); start_of_line = 0; }
 template_variable = < '{{{' ( ! '}}}' !eol !eof . )* '}}}' >                   { bprintf("%s", yytext); }
+template_nested = template_nested_open template_nested_content template_nested_close
+template_nested_open = '{{'
+template_nested_close = '}}'
+template_nested_content = ( !template_nested_close template_nested? . )*
 noinclude = noinclude_open | noinclude_close
 noinclude_open = ( '<noinclude>' | '<NOINCLUDE>' )                             { template_noinclude = 1; }
 noinclude_close = ( '</noinclude>' | '</NOINCLUDE>' )                          { template_noinclude = 0; }
