@@ -100,13 +100,13 @@ KIWI_ACTION(bullet_list_action_1) {
 }
 
 KIWI_ACTION(bullet_action_1) {
-  while((current_bullet_list_level < yyleng) && current_bullet_list_level++) {
+  while((current_bullet_list_level < text_length) && current_bullet_list_level++) {
       bprintf("<ul>");
   }
-  while((current_bullet_list_level > yyleng) && current_bullet_list_level--) {
+  while((current_bullet_list_level > text_length) && current_bullet_list_level--) {
       bprintf("</ul>");
   }
-  current_bullet_list_level = yyleng;
+  current_bullet_list_level = text_length;
   bprintf("<li>");
 }
 
@@ -118,13 +118,13 @@ KIWI_ACTION(definition_list_action_1) {
 }
 
 KIWI_ACTION(definition_action_1) {
-  while((current_definition_list_level < yyleng) && current_definition_list_level++) {
+  while((current_definition_list_level < text_length) && current_definition_list_level++) {
       bprintf("<dl>");
   }
-  while((current_definition_list_level > yyleng) && current_definition_list_level--) {
+  while((current_definition_list_level > text_length) && current_definition_list_level--) {
       bprintf("</dl>");
   }
-  current_definition_list_level = yyleng;
+  current_definition_list_level = text_length;
   bprintf("<dd>");
 }
 
@@ -135,18 +135,18 @@ KIWI_ACTION(numbered_list_action_1) {
 }
 
 KIWI_ACTION(numbered_action_1) {
-  while((current_numbered_list_level < yyleng) && current_numbered_list_level++) {
+  while((current_numbered_list_level < text_length) && current_numbered_list_level++) {
       bprintf("<ol>");
   }
-  while((current_numbered_list_level > yyleng) && current_numbered_list_level--) {
+  while((current_numbered_list_level > text_length) && current_numbered_list_level--) {
       bprintf("</ol>");
   }
-  current_numbered_list_level = yyleng;
+  current_numbered_list_level = text_length;
   bprintf("<li>");
 }
 
 KIWI_ACTION(nowiki_action_1) {
-  bstring markup = bfromcstr(yytext);
+  bstring markup = bfromcstr(text);
   strip_tags(markup);
   append_to_tag_content("%s", bdata(markup));
   bdestroy(markup);
@@ -194,17 +194,17 @@ KIWI_ACTION(image_action_1) {
 }
 
 KIWI_ACTION(image_link_action_1) {
-  if(yyleng == 0) {
+  if(text_length == 0) {
     image_attributes |= IMAGE_NOLINK;
   } else {
     image_attributes |= IMAGE_CUSTOMLINK;
-    bassignformat(image_link_url, "%s", yytext);
+    bassignformat(image_link_url, "%s", text);
   }
 }
 
 KIWI_ACTION(image_caption_action_1) {
   image_attributes |= IMAGE_HAS_CAPTION;
-  bassignformat(image_caption, "%s", yytext);
+  bassignformat(image_caption, "%s", text);
 }
 
 KIWI_ACTION(table_open_action_1) {
@@ -246,13 +246,13 @@ KIWI_ACTION(cell_attribute_list_action_1) {
 
 KIWI_ACTION(cell_attribute_name_action_1) {
   btrunc(tag_attribute, 0);
-  bcatcstr(tag_attribute, yytext);
+  bcatcstr(tag_attribute, text);
 }
 
 KIWI_ACTION(cell_attribute_value_action_1) {
   struct node *node = kw_list_append_new(&tag_attributes_list);
   bconcat(node->name, tag_attribute);
-  bcatcstr(node->content, yytext);
+  bcatcstr(node->content, text);
   btrimws(node->name);
   btrimws(node->content);
 }
@@ -288,13 +288,13 @@ KIWI_ACTION(complex_header_action_2) {
 }
 
 KIWI_ACTION(template_name_action_1) {
-  bcatcstr(template_list.tail->name, yytext);
+  bcatcstr(template_list.tail->name, text);
   brtrimws(template_list.tail->name);
 }
 
 KIWI_ACTION(template_content_action_1) {
-  bcatcstr(template_list.tail->content, yytext);
-  template_list.tail->level = hash(yytext);
+  bcatcstr(template_list.tail->content, text);
+  template_list.tail->level = hash(text);
 }
 
 KIWI_ACTION(template_close_action_1) {
@@ -310,13 +310,13 @@ KIWI_ACTION(template_close_action_1) {
 
 KIWI_ACTION(tag_attribute_name_action_1) {
   btrunc(tag_attribute, 0);
-  bcatcstr(tag_attribute, yytext);
+  bcatcstr(tag_attribute, text);
 }
 
 KIWI_ACTION(tag_attribute_value_action_1) {
   struct node *node = kw_list_append_new(&tag_attributes_list);
   bconcat(node->name, tag_attribute);
-  bcatcstr(node->content, yytext);
+  bcatcstr(node->content, text);
   btrimws(node->name);
   btrimws(node->content);
 }
@@ -326,7 +326,7 @@ KIWI_ACTION(tag_close_action_1) {
 
   btolower(tag_name);
   if(valid_html_tag(bdata(tag_name), tag_name->slen)) {
-    if(tag_self_closing(bdata(tag_name)) && yytext && yytext[yyleng-1] == '/') {
+    if(tag_self_closing(bdata(tag_name)) && text && text[text_length-1] == '/') {
       bprintf("<%s%s>", bdata(tag_name), bdata(tag_attributes_validated));
     } else {
       if(bdata(tag_name)[0] == '/') {
@@ -343,7 +343,7 @@ KIWI_ACTION(tag_close_action_1) {
 }
 
 KIWI_ACTION(tag_action_1) {
-  bcatcstr(tag_name, yytext); 
+  bcatcstr(tag_name, text); 
 }
 
 void kw_parse(Kw* k) {
