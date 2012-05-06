@@ -5,12 +5,12 @@
 
 int main() {
   int i;
-  for(i = 0; i < 100; i++) {
-    init();
+  for(i = 0; i < 2000; i++) {
+    Kw* k = kw_init();
     file_get_contents(input_buffer, "spec/fixtures/tables");
-    parse();
+    kw_parse(k);
     printf("%d\n", i);
-    cleanup();
+    kw_cleanup(k);
   }
   return 0;
 }

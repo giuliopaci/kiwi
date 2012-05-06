@@ -4,15 +4,15 @@ OS=$(shell uname)
 CFLAGS = -fPIC -O3 -g3 -Wall -std=gnu99
 all : $(EXAMPLES)
 
-%.leg.tmp.c: %.leg
-	leg -o $(@) $(<)
+%.greg.tmp.c: %.greg
+	greg -o $(@) $(<)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $(<) -o $(@)
 
 LIB_SOURCES=src/bstrlib.c src/list.c src/content.c src/io.c src/parse.c src/stack.c
-LEG_SOURCES=src/syntax.leg
-LIB_SOURCES+=$(LEG_SOURCES:=.tmp.c)
+GREG_SOURCES=src/syntax.greg
+LIB_SOURCES+=$(GREG_SOURCES:=.tmp.c)
 
 BIN_SOURCES:= src/parser.c src/testlist.c src/memtest.c
 
@@ -32,6 +32,6 @@ bin/%: src/%.o $(LIB_OBJECTS)
 
 clean:
 	$(RM) -r bin libkiwi.so
-	$(RM) $(LIB_OBJECTS) $(LEG_SOURCES:=.tmp.c) $(BIN_OBJECTS)
+	$(RM) $(LIB_OBJECTS) $(GREG_SOURCES:=.tmp.c) $(BIN_OBJECTS)
 
 .DELETE_ON_ERROR:

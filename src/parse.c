@@ -7,7 +7,6 @@
 #include "parse.h"
 #include "stack.h"
 
-int yyparse(void);
 
 bstring get_input_buffer(void) {
   return input_buffer;
@@ -347,9 +346,9 @@ KIWI_ACTION(tag_action_1) {
   bcatcstr(tag_name, yytext); 
 }
 
-void parse() {
+void kw_parse(Kw* k) {
   bprintf("<p>");
-  while(yyparse()) {}
+  while(kw_low_level_parse(k)) {}
   bassigncstr(tag_name, "");
   close_needed_tags();
   bprintf("</p>");

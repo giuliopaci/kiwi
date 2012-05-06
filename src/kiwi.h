@@ -75,10 +75,11 @@ bstring input_buffer;
 long input_buffer_pos;
 bstring base_url;
 bstring image_base_url;
-
-void init(void);
-void cleanup(void);
-void parse(void);
+typedef void Kw;
+Kw* kw_init(void);
+void kw_cleanup(Kw* k);
+int kw_low_level_parse(Kw* k);
+void kw_parse(Kw* k);
 void handle_toc(void);
 bstring get_output_buffer();
 char *get_output_buffer_cstr(void);

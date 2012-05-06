@@ -8,7 +8,7 @@
 #include "stack.h"
 
 #define YY_noDEBUG 1
-#define YY_INPUT(buf, result, max_size) handle_input(buf, &result, max_size)
+#define YY_INPUT(buf, result, max_size, D) handle_input(buf, &result, max_size)
 
 #define RUN_ACTION(name) name(yyleng, yytext)
 %}
@@ -226,7 +226,11 @@ anything_else = < !eol . >                                                     {
 
 // These have to be here to get access to the yy** vars
 
-void init(void) {
+struct _kw { GREG g; };
+Kw* kw_init(void) {
+  struct _kw* k;
+  k = (Kw*) malloc(sizeof(struct _kw));
+  yyinit(&(k->g));
   current_header_level = 0;
   start_of_line = 1;
   image_attributes = 0;
@@ -266,9 +270,10 @@ void init(void) {
   tag_attribute = bfromcstr("");
   tag_attributes_validated = bfromcstr("");
   kw_stack_init(&tag_stack);
+  return k;
 }
 
-void cleanup(void) {
+void kw_cleanup(Kw* k) {
   // These are already NULL safe
   bdestroy(tag_content);
   bdestroy(image_variables);
@@ -292,11 +297,11 @@ void cleanup(void) {
   kw_list_free(&tag_attributes_list);
   kw_list_free(&template_list);
 
-  // Clean up after leg...
-  if(yybuf) free(yybuf);
-  if(yytext) free(yytext);
-  if(yythunks) free(yythunks);
-  if(yyvals) free(yyvals);
+  // Clean up after greg...
+  yydeinit(&(((struct _kw*)k)->g));
+  free(k);
+}
 
-  yybuflen = 0;
+int kw_low_level_parse(Kw* k) {
+  return yyparse(&(((struct _kw*)k)->g));
 }

@@ -2,7 +2,8 @@
 #include "io.h"
 
 int main(int argc, char **argv) {
-   init();
+
+   Kw* k = kw_init();
    //file_get_contents(input, "spec/fixtures/cnn.com");
    stdin_get_contents(input_buffer);
    if(argc > 0) {
@@ -11,8 +12,8 @@ int main(int argc, char **argv) {
    if(argc > 1) {
      set_image_base_url(argv[2]);
    }
-   parse();
+   kw_parse(k);
    printf("%s", bdata(output_buffer));
-   cleanup();
+   kw_cleanup(k);
    return 0;
  }
