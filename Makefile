@@ -1,46 +1,37 @@
-EXAMPLES = syntax
+EXAMPLES = bin/parser bin/memtest bin/testlist
 OS=$(shell uname)
 
 CFLAGS = -fPIC -O3 -g3 -Wall -std=gnu99
 all : $(EXAMPLES)
 
-syntax : .FORCE
-	mkdir -p bin
-	leg -o src/syntax.leg.c src/syntax.leg
-	$(CC) $(CFLAGS) -c src/bstrlib.c
-	$(CC) $(CFLAGS) -c src/syntax.leg.c
-	$(CC) $(CFLAGS) -c src/list.c
-	$(CC) $(CFLAGS) -c src/content.c
-	$(CC) $(CFLAGS) -c src/io.c
-	$(CC) $(CFLAGS) -c src/parse.c
-	$(CC) $(CFLAGS) -c src/stack.c
+%.leg.tmp.c: %.leg
+	leg -o $(@) $(<)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $(<) -o $(@)
+
+LIB_SOURCES=src/bstrlib.c src/list.c src/content.c src/io.c src/parse.c src/stack.c
+LEG_SOURCES=src/syntax.leg
+LIB_SOURCES+=$(LEG_SOURCES:=.tmp.c)
+
+BIN_SOURCES:= src/parser.c src/testlist.c src/memtest.c
+
+LIB_OBJECTS:=$(LIB_SOURCES:.c=.o)
+BIN_OBJECTS:=$(BIN_SOURCES:.c=.o)
+
+libkiwi.so: $(LIB_OBJECTS)
 ifeq ($(OS), Darwin)
-	$(CC) $(CFLAGS) -dynamiclib -shared -o libkiwi.so syntax.leg.o bstrlib.o list.o stack.o content.o io.o parse.o
+	$(CC) $(CFLAGS) -dynamiclib -shared -o $(@) $(LIB_OBJECTS)
 else
-	$(CC) $(CFLAGS) -shared -o libkiwi.so syntax.leg.o bstrlib.o list.o stack.o content.o io.o parse.o
+	$(CC) $(CFLAGS) -shared -o  $(@) $(LIB_OBJECTS)
 endif
-	$(CC) $(CFLAGS) -c src/main.c
-	$(CC) $(CFLAGS) -o bin/parser main.o syntax.leg.o bstrlib.o list.o stack.o content.o io.o parse.o
 
-testlist: .FORCE
-	$(CC) $(CFLAGS) -c src/bstrlib.c
-	$(CC) $(CFLAGS) -c src/list.c
-	$(CC) $(CFLAGS) -c src/testlist.c
-	$(CC) $(CFLAGS) -o bin/testlist testlist.o bstrlib.o list.o
+bin/%: src/%.o $(LIB_OBJECTS)
+	mkdir -p bin
+	$(CC) $(CFLAGS) -o $(@) $(^)
 
-memtest: .FORCE
-	$(CC) $(CFLAGS) -c src/bstrlib.c
-	$(CC) $(CFLAGS) -c src/syntax.leg.c
-	$(CC) $(CFLAGS) -c src/list.c
-	$(CC) $(CFLAGS) -c src/content.c
-	$(CC) $(CFLAGS) -c src/io.c
-	$(CC) $(CFLAGS) -c src/parse.c
-	$(CC) $(CFLAGS) -c src/memtest.c
-	$(CC) $(CFLAGS) -c src/stack.c
-	$(CC) $(CFLAGS) -o bin/memtest memtest.o syntax.leg.o bstrlib.o list.o stack.o content.o io.o parse.o
+clean:
+	$(RM) -r bin libkiwi.so
+	$(RM) $(LIB_OBJECTS) $(LEG_SOURCES:=.tmp.c) $(BIN_OBJECTS)
 
-
-clean : .FORCE
-	rm -rf bin/* *~ *.o *.[pl]eg.[cd] *.so *.a $(EXAMPLES)
-
-.FORCE :
+.DELETE_ON_ERROR:
