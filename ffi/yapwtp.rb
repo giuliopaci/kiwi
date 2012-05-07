@@ -23,12 +23,12 @@ module YAPWTP
   extend FFI::Library
   ffi_lib File.join(File.dirname(__FILE__), '..', 'libkiwi.so')
   # void init(void)
-  attach_function :init, [], :void
+  attach_function :kw_init, [], :pointer
   # void cleanup(void)
-  attach_function :cleanup, [], :void
+  attach_function :kw_cleanup, [:pointer], :void
 
   # void parse(bstring inputbuffer, bstring outbuffer);
-  attach_function :parse, [], :void
+  attach_function :kw_parse, [:pointer], :void
 
   # void stdin_get_contents(bstring buffer)
   attach_function :stdin_get_contents, [:pointer], :void
@@ -64,14 +64,14 @@ class WikiParser
   end
 
   def setup
-    init
+    @kw = kw_init
     @dirty = false
     @output = nil
     @templates = nil
   end
 
   def reset
-    cleanup
+    kw_cleanup @kw
     setup
   end
 
@@ -109,7 +109,7 @@ class WikiParser
       source << "\n"
     end
     str_get_contents source
-    parse
+    kw_parse @kw
     @dirty = true
     return parsed_text
   end
@@ -120,7 +120,7 @@ class WikiParser
       raise IOError("Can't open #{file}")
     end
     file_get_contents get_input_buffer, file
-    parse
+    kw_parse @kw
     @dirty = true
     return parsed_text
   end
