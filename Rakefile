@@ -1,8 +1,9 @@
-require 'spec/rake/spectask'
+require 'rake'
+require 'rspec/core/rake_task'
 
 task :default => :spec
 
 desc "Run all specs in spec directory"
-Spec::Rake::SpecTask.new(:spec) do |t|
-  t.spec_files = FileList['spec/**/*_spec.rb'].reverse
+RSpec::Core::RakeTask.new(:spec) do |t|
+  t.pattern = ['spec/**/*_spec.rb',  'spec/**/**/*_spec.rb']
 end
