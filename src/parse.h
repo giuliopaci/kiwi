@@ -1,7 +1,9 @@
 #ifndef __PARSE_H
 #define __PARSE_H
 
-#define KIWI_ACTION(name) void name(int text_length, char *text)
+#include "kiwi.h"
+
+#define KIWI_ACTION(name) void name(Kw* k, int text_length, char *text)
 KIWI_ACTION(heading_action_1);
 KIWI_ACTION(heading_action_2);
 KIWI_ACTION(bullet_list_action_1);

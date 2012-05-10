@@ -35,24 +35,24 @@ module YAPWTP
   # void file_get_contents(bstring buffer, char *filename)
   attach_function :file_get_contents, [:pointer, :string], :void
   # void str_get_contents(const char *str)
-  attach_function :str_get_contents, [:string], :void
+  attach_function :str_get_contents, [:pointer, :string], :void
 
   # bstring get_input_buffer(void)
-  attach_function :get_input_buffer, [], :pointer
+  attach_function :kw_get_input_buffer, [:pointer], :pointer
   # char * get_output_buffer_cstr(void)
-  attach_function :get_output_buffer_cstr, [], :string
+  attach_function :kw_get_output_buffer_cstr, [:pointer], :string
 
   # void set_base_url(char *str)
-  attach_function :set_base_url, [:string], :void
+  attach_function :kw_set_base_url, [:pointer, :string], :void
   # void set_image_base_url(char *str)
-  attach_function :set_image_base_url, [:string], :void
+  attach_function :kw_set_image_base_url, [:pointer, :string], :void
 
   # void reset_template_iter(void)
-  attach_function :reset_template_iter, [], :void
+  attach_function :reset_template_iter, [:pointer], :void
   # struct node *get_next_template(void)
-  attach_function :get_next_template, [], :pointer
+  attach_function :get_next_template, [:pointer], :pointer
   # int get_template_count(void)
-  attach_function :get_template_count, [], :int
+  attach_function :get_template_count, [:pointer], :int
 end
 
 class WikiParser
@@ -75,10 +75,14 @@ class WikiParser
     setup
   end
 
+  def template_count
+    return get_template_count @kw
+  end
+
   private
   def next_template
     return {} if !@dirty
-    t = get_next_template
+    t = get_next_template @kw
     return nil if t.null?
     template = Node.new(t)
     name = BString.bstr2cstr(template[:name], 20)
@@ -96,7 +100,7 @@ class WikiParser
   public
   def parsed_text
     if @dirty
-      @output ||= String.new(get_output_buffer_cstr)
+      @output ||= String.new(kw_get_output_buffer_cstr @kw)
     else
       nil
     end
@@ -108,7 +112,7 @@ class WikiParser
     if source[-1] != "\n"
       source << "\n"
     end
-    str_get_contents source
+    str_get_contents @kw, source
     kw_parse @kw
     @dirty = true
     return parsed_text
@@ -119,7 +123,7 @@ class WikiParser
     if !File.exist? file
       raise IOError("Can't open #{file}")
     end
-    file_get_contents get_input_buffer, file
+    file_get_contents kw_get_input_buffer(@kw), file
     kw_parse @kw
     @dirty = true
     return parsed_text
@@ -128,7 +132,7 @@ class WikiParser
   def each_template
     return nil if !@dirty
 
-    reset_template_iter
+    reset_template_iter @kw
     while template = next_template
       yield template
     end
@@ -143,11 +147,11 @@ class WikiParser
   end
 
   def base_url= url
-    set_base_url url
+    kw_set_base_url @kw, url
   end
 
   def image_base_url= url
-    set_image_base_url url
+    kw_set_image_base_url @kw, url
   end
 end
 

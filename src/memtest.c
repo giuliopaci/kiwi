@@ -7,7 +7,7 @@ int main() {
   int i;
   for(i = 0; i < 2000; i++) {
     Kw* k = kw_init();
-    file_get_contents(input_buffer, "spec/fixtures/tables");
+    file_get_contents(kw_get_input_buffer(k), "spec/fixtures/tables");
     kw_parse(k);
     printf("%d\n", i);
     kw_cleanup(k);

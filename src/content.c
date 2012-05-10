@@ -2,7 +2,7 @@
 #include "stdbool.h"
 #include "list.h"
 #include "content.h"
-#include "kiwi.h"
+#include "private-kiwi.h"
 #include "io.h"
 #include <stdio.h>
 
@@ -59,74 +59,74 @@ void assemble_toc(struct node *item, bstring toc_buffer) {
 }
 
 // Insert the ToC into the output buffer in place of the __TOC__ tag
-void insert_reloc_toc(bstring toc_buffer) {
+void insert_reloc_toc(Kw* k, bstring toc_buffer) {
   bstring find = bfromcstr("__TOC__");
-  if(bfindreplace(output_buffer, find, toc_buffer, 0) == BSTR_ERR) {
+  if(bfindreplace(((_kw_t*)k)->output_buffer, find, toc_buffer, 0) == BSTR_ERR) {
     printf("Error inserting toc_buffer into output_buffer\n");
   }
   bdestroy(find);
 }
 
 // Main ToC routine
-void handle_toc(void) {
-  if(toc_attributes & TOC_NOTOC) {
+void handle_toc(Kw* k) {
+  if(((_kw_t*)k)->toc_attributes & TOC_NOTOC) {
     return;
   }
 
-  if((toc_list.size > 3) || (toc_attributes & TOC_FORCETOC)) {
+  if((((_kw_t*)k)->toc_list.size > 3) || (((_kw_t*)k)->toc_attributes & TOC_FORCETOC)) {
     bstring toc_buffer = bfromcstr("");
-    assemble_toc(toc_list.head->next, toc_buffer);
+    assemble_toc(((_kw_t*)k)->toc_list.head->next, toc_buffer);
 
-    if(toc_attributes & TOC_RELOC) {
-      insert_reloc_toc(toc_buffer);
+    if(((_kw_t*)k)->toc_attributes & TOC_RELOC) {
+      insert_reloc_toc(k, toc_buffer);
       bdestroy(toc_buffer);
       return;
     }
 
-    if(binsert(output_buffer, 0, toc_buffer, ' ') != BSTR_OK) {
+    if(binsert(((_kw_t*)k)->output_buffer, 0, toc_buffer, ' ') != BSTR_OK) {
       printf("Error prepending toc_buffer to output_buffer\n");
     }
     bdestroy(toc_buffer);
   }
 }
 
-void open_tag(char *tag, char *args) {
+void open_tag(Kw* k, char *tag, char *args) {
   if(args) {
-    bprintf("<%s %s>", tag, args);
+    bprintf(k, "<%s %s>", tag, args);
   } else {
-    bprintf("<%s>", tag);
+    bprintf(k, "<%s>", tag);
   }
 
-  in_tag = 1;
-  if(tag_content) {
-    btrunc(tag_content,0 );
+  ((_kw_t*)k)->in_tag = 1;
+  if(((_kw_t*)k)->tag_content) {
+    btrunc(((_kw_t*)k)->tag_content,0 );
   }
 }
 
-void close_tag(char *tag) {
-  bprintf("</%s>", tag);
-  in_tag = 0;
+void close_tag(Kw* k, char *tag) {
+  bprintf(k, "</%s>", tag);
+  ((_kw_t*)k)->in_tag = 0;
 }
 
-void append_to_tag_content(char *fmt, ...) {
+void append_to_tag_content(Kw* k, char *fmt, ...) {
   int ret;
 
-  if(!in_tag) {
-    bvformata(ret, output_buffer, fmt, fmt);
+  if(!((_kw_t*)k)->in_tag) {
+    bvformata(ret, ((_kw_t*)k)->output_buffer, fmt, fmt);
     return;
   }
 
-  bvformata(ret, tag_content, fmt, fmt);
+  bvformata(ret, ((_kw_t*)k)->tag_content, fmt, fmt);
 }
 
 // Initialize variables used in html tag processing
-void init_tag_vars(void) {
-  btrunc(tag_name, 0);
-  btrunc(tag_attribute, 0);
-  btrunc(tag_attributes_validated, 0);
-  if(tag_attributes_list.size > 0) {
-    kw_list_free(&tag_attributes_list);
-    kw_list_init(&tag_attributes_list);
+void init_tag_vars(Kw* k) {
+  btrunc(((_kw_t*)k)->tag_name, 0);
+  btrunc(((_kw_t*)k)->tag_attribute, 0);
+  btrunc(((_kw_t*)k)->tag_attributes_validated, 0);
+  if(((_kw_t*)k)->tag_attributes_list.size > 0) {
+    kw_list_free(&((_kw_t*)k)->tag_attributes_list);
+    kw_list_init(&((_kw_t*)k)->tag_attributes_list);
   }
 }
 
@@ -331,13 +331,13 @@ bool tag_self_closing(char *tag) {
 }
 
 // Validate whether a particular attribute is allowed on a tag. 
-int validate_tag_attributes(struct node *item) {
+int validate_tag_attributes(Kw* k, struct node *item) {
   if((item == NULL) || (item->name == NULL) || (item->content == NULL)) {
     return 1;
   }
 
   btolower(item->name);
-  int hashed_key = hash(bdata(tag_name)) % 512;
+  int hashed_key = hash(bdata(((_kw_t*)k)->tag_name)) % 512;
 
   if(!tags_hash[hashed_key].key || (tags_hash[hashed_key].size < 1)) {
     return 1;
@@ -354,7 +354,7 @@ int validate_tag_attributes(struct node *item) {
     // Do an integer compare on the first character first, then match the whole tag
     if(tags_hash[hashed_key].attributes[i][0] == bdata(item->name)[0]) { 
       if(item_name && !strncmp(item_name, tags_hash[hashed_key].attributes[i], item->name->slen)) {
-        bformata(tag_attributes_validated, " %s=\"%s\"", item_name, bdata(item->content));
+        bformata(((_kw_t*)k)->tag_attributes_validated, " %s=\"%s\"", item_name, bdata(item->content));
         return 1;
       }
     }
@@ -363,23 +363,23 @@ int validate_tag_attributes(struct node *item) {
   return 1;
 }
 
-bool close_needed_tags() {
-  bstring last_tag = (bstring)kw_peek(&tag_stack, 0);
-  if(!last_tag || bstrcmp(last_tag, tag_name) != 0) {
+bool close_needed_tags(Kw* k) {
+  bstring last_tag = (bstring)kw_peek(&((_kw_t*)k)->tag_stack, 0);
+  if(!last_tag || bstrcmp(last_tag, ((_kw_t*)k)->tag_name) != 0) {
     //Walk down stack
     bstring this_tag;
-    while((this_tag = (bstring)kw_pop(&tag_stack)) != NULL) {
-      bstring tmp = bmidstr(tag_name, 1, blength(tag_name));
+    while((this_tag = (bstring)kw_pop(&((_kw_t*)k)->tag_stack)) != NULL) {
+      bstring tmp = bmidstr(((_kw_t*)k)->tag_name, 1, blength(((_kw_t*)k)->tag_name));
       if(bstrcmp(this_tag, tmp) == 0) {
         bdestroy(tmp);
         break;
       } else {
-        bprintf("</%s>", bdata(this_tag));
+        bprintf(k, "</%s>", bdata(this_tag));
         bdestroy(this_tag);
       }
       bdestroy(tmp);
     }
-    if(tag_name && blength(tag_name) != 0) bprintf("<%s>", bdata(tag_name)); 
+    if(((_kw_t*)k)->tag_name && blength(((_kw_t*)k)->tag_name) != 0) bprintf(k, "<%s>", bdata(((_kw_t*)k)->tag_name)); 
     return true;
   }
   return false;

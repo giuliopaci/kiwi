@@ -6,46 +6,46 @@
 #include <inttypes.h>
 #include "parse.h"
 #include "stack.h"
+#include "private-kiwi.h"
 
-
-bstring get_input_buffer(void) {
-  return input_buffer;
+bstring kw_get_input_buffer(Kw* k) {
+  return ((_kw_t*)k)->input_buffer;
 }
 
-bstring get_output_buffer(void) {
-  return output_buffer;
+bstring kw_get_output_buffer(Kw* k) {
+  return ((_kw_t*)k)->output_buffer;
 }
 
-char *get_output_buffer_cstr(void) {
-  return bdata(output_buffer);
+char *kw_get_output_buffer_cstr(Kw* k) {
+  return bdata(((_kw_t*)k)->output_buffer);
 }
 
-void set_base_url(char *str) {
-  btrunc(base_url, 0);
-  bcatcstr(base_url, str);
+void kw_set_base_url(Kw* k, char *str) {
+  btrunc(((_kw_t*)k)->base_url, 0);
+  bcatcstr(((_kw_t*)k)->base_url, str);
 }
 
-void set_image_base_url(char *str) {
-  btrunc(image_base_url, 0);
-  bcatcstr(image_base_url, str);
+void kw_set_image_base_url(Kw* k, char *str) {
+  btrunc(((_kw_t*)k)->image_base_url, 0);
+  bcatcstr(((_kw_t*)k)->image_base_url, str);
 }
 
-int get_template_count(void) {
-  return template_list.size;
+int get_template_count(Kw* k) {
+  return ((_kw_t*)k)->template_list.size;
 }
 
-void reset_template_iter() {
-  template_list_iter = template_list.head;
+void reset_template_iter(Kw* k) {
+  ((_kw_t*)k)->template_list_iter = ((_kw_t*)k)->template_list.head;
 }
 
-struct node *get_next_template(void) {
-  if(!template_list_iter) {
-    template_list_iter = template_list.head;
+struct node *get_next_template(Kw* k) {
+	if(!((_kw_t*)k)->template_list_iter) {
+		((_kw_t*)k)->template_list_iter = ((_kw_t*)k)->template_list.head;
   }
 
-  if(template_list_iter->next) {
-    template_list_iter = template_list_iter->next;
-    return template_list_iter;
+  if(((_kw_t*)k)->template_list_iter->next) {
+    ((_kw_t*)k)->template_list_iter = ((_kw_t*)k)->template_list_iter->next;
+    return ((_kw_t*)k)->template_list_iter;
   }
 
   return NULL;
@@ -53,305 +53,305 @@ struct node *get_next_template(void) {
 
 KIWI_ACTION(heading_action_1) {
   char tag[4];
-  bprintf("\n  ");
-  sprintf(tag, "h%d", current_header_level);
-  open_tag(tag, NULL);
+  bprintf(k, "\n  ");
+  sprintf(tag, "h%d", ((_kw_t*)k)->current_header_level);
+  open_tag(k, tag, NULL);
 }
 
 KIWI_ACTION(heading_action_2) {
-  brtrimws(tag_content);
-  bstring tmp = bstrcpy(tag_content);
+  brtrimws(((_kw_t*)k)->tag_content);
+  bstring tmp = bstrcpy(((_kw_t*)k)->tag_content);
   strip_html_markup(tmp);
   urlencode(tmp);
-  bprintf("<span class=\"editsection\">[<a href=\"edit\">edit</a>]</span><span class=\"mw-headline\" id=\"%s\">", bdata(tmp));
+  bprintf(k, "<span class=\"editsection\">[<a href=\"edit\">edit</a>]</span><span class=\"mw-headline\" id=\"%s\">", bdata(tmp));
   bdestroy(tmp);
   
-  bprintf("%s</span>", bdata(tag_content));
+  bprintf(k, "%s</span>", bdata(((_kw_t*)k)->tag_content));
   char tag[4];
-  sprintf(tag, "h%d", current_header_level);
-  close_tag(tag);
-  bprintf("\n");
+  sprintf(tag, "h%d", ((_kw_t*)k)->current_header_level);
+  close_tag(k, tag);
+  bprintf(k, "\n");
   
-  struct node *current = kw_list_append_new(&toc_list);
+  struct node *current = kw_list_append_new(&((_kw_t*)k)->toc_list);
   
-  tmp = bstrcpy(tag_content);
+  tmp = bstrcpy(((_kw_t*)k)->tag_content);
   strip_html_markup(tmp);
   urlencode(tmp);
-  bprintf("  <a name=\"%s\"></a>\n", bdata(tmp));
+  bprintf(k, "  <a name=\"%s\"></a>\n", bdata(tmp));
   bassign(current->name, tmp);
   
-  bstring human_name = bstrcpy(tag_content);
+  bstring human_name = bstrcpy(((_kw_t*)k)->tag_content);
   strip_tags(human_name);
   brtrimws(human_name);
   bassign(current->content, human_name);
-  current->level = current_header_level;
+  current->level = ((_kw_t*)k)->current_header_level;
   
   bdestroy(tmp);
   bdestroy(human_name);
   
-  btrunc(tag_content, 0);
-  current_header_level = 0;
+  btrunc(((_kw_t*)k)->tag_content, 0);
+  ((_kw_t*)k)->current_header_level = 0;
 }
 
 KIWI_ACTION(bullet_list_action_1) {
-  while((current_bullet_list_level > 0) && current_bullet_list_level--) {
-    bprintf("</ul>");
+  while((((_kw_t*)k)->current_bullet_list_level > 0) && ((_kw_t*)k)->current_bullet_list_level--) {
+    bprintf(k, "</ul>");
   }
 }
 
 KIWI_ACTION(bullet_action_1) {
-  while((current_bullet_list_level < text_length) && current_bullet_list_level++) {
-      bprintf("<ul>");
+  while((((_kw_t*)k)->current_bullet_list_level < text_length) && ((_kw_t*)k)->current_bullet_list_level++) {
+      bprintf(k, "<ul>");
   }
-  while((current_bullet_list_level > text_length) && current_bullet_list_level--) {
-      bprintf("</ul>");
+  while((((_kw_t*)k)->current_bullet_list_level > text_length) && ((_kw_t*)k)->current_bullet_list_level--) {
+      bprintf(k, "</ul>");
   }
-  current_bullet_list_level = text_length;
-  bprintf("<li>");
+  ((_kw_t*)k)->current_bullet_list_level = text_length;
+  bprintf(k, "<li>");
 }
 
 KIWI_ACTION(definition_list_action_1) {
-  while((current_definition_list_level > 0) && current_definition_list_level--) {
-    bprintf("</dd>");
-    bprintf("</dl>");
+  while((((_kw_t*)k)->current_definition_list_level > 0) && ((_kw_t*)k)->current_definition_list_level--) {
+    bprintf(k, "</dd>");
+    bprintf(k, "</dl>");
   }
 }
 
 KIWI_ACTION(definition_action_1) {
-  while((current_definition_list_level < text_length) && current_definition_list_level++) {
-      bprintf("<dl>");
+  while((((_kw_t*)k)->current_definition_list_level < text_length) && ((_kw_t*)k)->current_definition_list_level++) {
+      bprintf(k, "<dl>");
   }
-  while((current_definition_list_level > text_length) && current_definition_list_level--) {
-      bprintf("</dl>");
+  while((((_kw_t*)k)->current_definition_list_level > text_length) && ((_kw_t*)k)->current_definition_list_level--) {
+      bprintf(k, "</dl>");
   }
-  current_definition_list_level = text_length;
-  bprintf("<dd>");
+  ((_kw_t*)k)->current_definition_list_level = text_length;
+  bprintf(k, "<dd>");
 }
 
 KIWI_ACTION(numbered_list_action_1) {
-  while((current_numbered_list_level > 0) && current_numbered_list_level--) { 
-    bprintf("</ol>"); 
+  while((((_kw_t*)k)->current_numbered_list_level > 0) && ((_kw_t*)k)->current_numbered_list_level--) { 
+    bprintf(k, "</ol>"); 
   } 
 }
 
 KIWI_ACTION(numbered_action_1) {
-  while((current_numbered_list_level < text_length) && current_numbered_list_level++) {
-      bprintf("<ol>");
+  while((((_kw_t*)k)->current_numbered_list_level < text_length) && ((_kw_t*)k)->current_numbered_list_level++) {
+      bprintf(k, "<ol>");
   }
-  while((current_numbered_list_level > text_length) && current_numbered_list_level--) {
-      bprintf("</ol>");
+  while((((_kw_t*)k)->current_numbered_list_level > text_length) && ((_kw_t*)k)->current_numbered_list_level--) {
+      bprintf(k, "</ol>");
   }
-  current_numbered_list_level = text_length;
-  bprintf("<li>");
+  ((_kw_t*)k)->current_numbered_list_level = text_length;
+  bprintf(k, "<li>");
 }
 
 KIWI_ACTION(nowiki_action_1) {
   bstring markup = bfromcstr(text);
   strip_tags(markup);
-  append_to_tag_content("%s", bdata(markup));
+  append_to_tag_content(k, "%s", bdata(markup));
   bdestroy(markup);
 }
 
 KIWI_ACTION(local_link_action_1) {
-  strip_html_markup(link_path);
-  urlencode(link_path);
-  remove_parentheticals(link_text);
-  btrimws(link_text);
-  append_to_tag_content("<a href=\"%s/%s\">%s</a>", bdata(base_url), bdata(link_path), bdata(link_text));
-  btrunc(link_path, 0);
-  btrunc(link_text, 0);
+  strip_html_markup(((_kw_t*)k)->link_path);
+  urlencode(((_kw_t*)k)->link_path);
+  remove_parentheticals(((_kw_t*)k)->link_text);
+  btrimws(((_kw_t*)k)->link_text);
+  append_to_tag_content(k, "<a href=\"%s/%s\">%s</a>", bdata(((_kw_t*)k)->base_url), bdata(((_kw_t*)k)->link_path), bdata(((_kw_t*)k)->link_text));
+  btrunc(((_kw_t*)k)->link_path, 0);
+  btrunc(((_kw_t*)k)->link_text, 0);
 }
 
 KIWI_ACTION(image_action_1) {
-  if(image_attributes & IMAGE_FRAME) {
-    bprintf("<div class=\"thumb tright\"><div class=\"thumbinner\">");
+  if(((_kw_t*)k)->image_attributes & IMAGE_FRAME) {
+    bprintf(k, "<div class=\"thumb tright\"><div class=\"thumbinner\">");
   }
 
-  if(!(image_attributes & IMAGE_NOLINK)) {
-    if(image_attributes & IMAGE_CUSTOMLINK)
-      bprintf("<a href=\"%s\" class=\"image\">", bdata(image_link_url));
+  if(!(((_kw_t*)k)->image_attributes & IMAGE_NOLINK)) {
+    if(((_kw_t*)k)->image_attributes & IMAGE_CUSTOMLINK)
+      bprintf(k, "<a href=\"%s\" class=\"image\">", bdata(((_kw_t*)k)->image_link_url));
     else
-      if(image_attributes & IMAGE_HAS_CAPTION)
-        bprintf("<a href=\"/File:%s\" class=\"image\" title=\"%s\">", bdata(image_url), bdata(image_caption));
+      if(((_kw_t*)k)->image_attributes & IMAGE_HAS_CAPTION)
+        bprintf(k, "<a href=\"/File:%s\" class=\"image\" title=\"%s\">", bdata(((_kw_t*)k)->image_url), bdata(((_kw_t*)k)->image_caption));
       else
-        bprintf("<a href=\"/File:%s\" class=\"image\">", bdata(image_url));
+        bprintf(k, "<a href=\"/File:%s\" class=\"image\">", bdata(((_kw_t*)k)->image_url));
   }
 
-  if(image_attributes & IMAGE_THUMB) {
-    bprintf("<img src=\"%s%s\" class=\"thumbimage\"/>", bdata(image_base_url), bdata(image_url));
-  } else if((image_attributes & IMAGE_FRAME) || (image_attributes & IMAGE_BORDER)) {
-    bprintf("<img src=\"%s%s\" class=\"thumbimage\"/>", bdata(image_base_url), bdata(image_url));
+  if(((_kw_t*)k)->image_attributes & IMAGE_THUMB) {
+    bprintf(k, "<img src=\"%s%s\" class=\"thumbimage\"/>", bdata(((_kw_t*)k)->image_base_url), bdata(((_kw_t*)k)->image_url));
+  } else if((((_kw_t*)k)->image_attributes & IMAGE_FRAME) || (((_kw_t*)k)->image_attributes & IMAGE_BORDER)) {
+    bprintf(k, "<img src=\"%s%s\" class=\"thumbimage\"/>", bdata(((_kw_t*)k)->image_base_url), bdata(((_kw_t*)k)->image_url));
   } else {
-    bprintf("<img src=\"%s%s\" %s/>", bdata(image_base_url), bdata(image_url), bdata(image_variables));
+    bprintf(k, "<img src=\"%s%s\" %s/>", bdata(((_kw_t*)k)->image_base_url), bdata(((_kw_t*)k)->image_url), bdata(((_kw_t*)k)->image_variables));
   }
-  if(!(image_attributes & IMAGE_NOLINK)) {
-    bprintf("</a>");
+  if(!(((_kw_t*)k)->image_attributes & IMAGE_NOLINK)) {
+    bprintf(k, "</a>");
   }
 
-  if(image_attributes & IMAGE_FRAME) {
-    bprintf("<div class=\"thumbcaption\">%s</div></div>", bdata(image_caption));
+  if(((_kw_t*)k)->image_attributes & IMAGE_FRAME) {
+    bprintf(k, "<div class=\"thumbcaption\">%s</div></div>", bdata(((_kw_t*)k)->image_caption));
   }
 }
 
 KIWI_ACTION(image_link_action_1) {
   if(text_length == 0) {
-    image_attributes |= IMAGE_NOLINK;
+    ((_kw_t*)k)->image_attributes |= IMAGE_NOLINK;
   } else {
-    image_attributes |= IMAGE_CUSTOMLINK;
-    bassignformat(image_link_url, "%s", text);
+    ((_kw_t*)k)->image_attributes |= IMAGE_CUSTOMLINK;
+    bassignformat(((_kw_t*)k)->image_link_url, "%s", text);
   }
 }
 
 KIWI_ACTION(image_caption_action_1) {
-  image_attributes |= IMAGE_HAS_CAPTION;
-  bassignformat(image_caption, "%s", text);
+  ((_kw_t*)k)->image_attributes |= IMAGE_HAS_CAPTION;
+  bassignformat(((_kw_t*)k)->image_caption, "%s", text);
 }
 
 KIWI_ACTION(table_open_action_1) {
-  init_tag_vars();
-  bcatcstr(tag_name, "table");
-  tr_found = 0; 
-  bprintf("<table");
+  init_tag_vars(k);
+  bcatcstr(((_kw_t*)k)->tag_name, "table");
+  ((_kw_t*)k)->tr_found = 0; 
+  bprintf(k, "<table");
 }
 
 KIWI_ACTION(table_open_action_2) {
   // Simpler to check the last output character than to hack up the LEG rules
-  if(bdata(output_buffer)[output_buffer->slen - 1] != '>') {
-    bprintf(">"); 
+  if(bdata(((_kw_t*)k)->output_buffer)[((_kw_t*)k)->output_buffer->slen - 1] != '>') {
+    bprintf(k, ">"); 
   }
 }
 
 KIWI_ACTION(table_caption_action_1) {
-  init_tag_vars();
-  bcatcstr(tag_name, "caption");
-  bprintf("<caption"); 
+  init_tag_vars(k);
+  bcatcstr(((_kw_t*)k)->tag_name, "caption");
+  bprintf(k, "<caption"); 
 }
 
 KIWI_ACTION(table_caption_action_2) {
   // Simpler to check the last output character than to hack up the LEG rules
-  if(bdata(output_buffer)[output_buffer->slen - 1] != '>') {
-    bprintf(">"); 
+  if(bdata(((_kw_t*)k)->output_buffer)[((_kw_t*)k)->output_buffer->slen - 1] != '>') {
+    bprintf(k, ">"); 
   }
 }
 
 KIWI_ACTION(table_caption_action_3) {
-  brtrimws(output_buffer); 
-  bprintf("</caption>"); 
+  brtrimws(((_kw_t*)k)->output_buffer); 
+  bprintf(k, "</caption>"); 
 }
 
 KIWI_ACTION(cell_attribute_list_action_1) {
-  kw_list_iterate(tag_attributes_list.head->next, validate_tag_attributes);
-  bprintf("%s>", bdata(tag_attributes_validated));
+	kw_list_iterate(((_kw_t*)k)->tag_attributes_list.head->next, validate_tag_attributes, k);
+  bprintf(k, "%s>", bdata(((_kw_t*)k)->tag_attributes_validated));
 }
 
 KIWI_ACTION(cell_attribute_name_action_1) {
-  btrunc(tag_attribute, 0);
-  bcatcstr(tag_attribute, text);
+  btrunc(((_kw_t*)k)->tag_attribute, 0);
+  bcatcstr(((_kw_t*)k)->tag_attribute, text);
 }
 
 KIWI_ACTION(cell_attribute_value_action_1) {
-  struct node *node = kw_list_append_new(&tag_attributes_list);
-  bconcat(node->name, tag_attribute);
+  struct node *node = kw_list_append_new(&((_kw_t*)k)->tag_attributes_list);
+  bconcat(node->name, ((_kw_t*)k)->tag_attribute);
   bcatcstr(node->content, text);
   btrimws(node->name);
   btrimws(node->content);
 }
 
 KIWI_ACTION(cell_close_action_1) {
-  brtrimws(output_buffer); 
-  bprintf("</td>"); 
+  brtrimws(((_kw_t*)k)->output_buffer); 
+  bprintf(k, "</td>"); 
 }
 
 KIWI_ACTION(sol_cell_open_action_1) {
-  init_tag_vars(); 
-  bcatcstr(tag_name, "td");
-  bprintf("<td"); 
+  init_tag_vars(k); 
+  bcatcstr(((_kw_t*)k)->tag_name, "td");
+  bprintf(k, "<td"); 
 }
 
 KIWI_ACTION(inline_cell_open_action_1) {
-  init_tag_vars();
-  bcatcstr(tag_name, "td");
-  bprintf("<td"); 
+  init_tag_vars(k);
+  bcatcstr(((_kw_t*)k)->tag_name, "td");
+  bprintf(k, "<td"); 
 }
 
 KIWI_ACTION(complex_header_action_1) {
-  init_tag_vars(); 
-  bcatcstr(tag_name, "th"); 
-  bprintf("<th"); 
+  init_tag_vars(k); 
+  bcatcstr(((_kw_t*)k)->tag_name, "th"); 
+  bprintf(k, "<th"); 
 }
 
 KIWI_ACTION(complex_header_action_2) {
   // Simpler to check the last output character than to hack up the LEG rules
-  if(bdata(output_buffer)[output_buffer->slen - 1] != '>') {
-    bprintf(">"); 
+  if(bdata(((_kw_t*)k)->output_buffer)[((_kw_t*)k)->output_buffer->slen - 1] != '>') {
+    bprintf(k, ">"); 
   }
 }
 
 KIWI_ACTION(template_name_action_1) {
-  bcatcstr(template_list.tail->name, text);
-  brtrimws(template_list.tail->name);
+  bcatcstr(((_kw_t*)k)->template_list.tail->name, text);
+  brtrimws(((_kw_t*)k)->template_list.tail->name);
 }
 
 KIWI_ACTION(template_content_action_1) {
-  bcatcstr(template_list.tail->content, text);
-  template_list.tail->level = hash(text);
+  bcatcstr(((_kw_t*)k)->template_list.tail->content, text);
+  ((_kw_t*)k)->template_list.tail->level = hash(text);
 }
 
 KIWI_ACTION(template_close_action_1) {
-  if(template_list.tail->level == 0) {
+  if(((_kw_t*)k)->template_list.tail->level == 0) {
     // Cover cases where the template has no arguments
-    template_list.tail->level = hash("");
+    ((_kw_t*)k)->template_list.tail->level = hash("");
   }
   if(PRESERVE_TEMPLATES) {
     // Some bug in leg prevents using braces here or even in this comment
-    bprintf("__%s_%"PRIu64"__", bdata(template_list.tail->name), hash(bdata(template_list.tail->content)));
+    bprintf(k, "__%s_%"PRIu64"__", bdata(((_kw_t*)k)->template_list.tail->name), hash(bdata(((_kw_t*)k)->template_list.tail->content)));
   }
 }
 
 KIWI_ACTION(tag_attribute_name_action_1) {
-  btrunc(tag_attribute, 0);
-  bcatcstr(tag_attribute, text);
+  btrunc(((_kw_t*)k)->tag_attribute, 0);
+  bcatcstr(((_kw_t*)k)->tag_attribute, text);
 }
 
 KIWI_ACTION(tag_attribute_value_action_1) {
-  struct node *node = kw_list_append_new(&tag_attributes_list);
-  bconcat(node->name, tag_attribute);
+  struct node *node = kw_list_append_new(&((_kw_t*)k)->tag_attributes_list);
+  bconcat(node->name, ((_kw_t*)k)->tag_attribute);
   bcatcstr(node->content, text);
   btrimws(node->name);
   btrimws(node->content);
 }
 
 KIWI_ACTION(tag_close_action_1) {
-  kw_list_iterate(tag_attributes_list.head->next, validate_tag_attributes);
+	kw_list_iterate(((_kw_t*)k)->tag_attributes_list.head->next, validate_tag_attributes, k);
 
-  btolower(tag_name);
-  if(valid_html_tag(bdata(tag_name), tag_name->slen)) {
-    if(tag_self_closing(bdata(tag_name)) && text && text[text_length-1] == '/') {
-      bprintf("<%s%s>", bdata(tag_name), bdata(tag_attributes_validated));
+  btolower(((_kw_t*)k)->tag_name);
+  if(valid_html_tag(bdata(((_kw_t*)k)->tag_name), ((_kw_t*)k)->tag_name->slen)) {
+    if(tag_self_closing(bdata(((_kw_t*)k)->tag_name)) && text && text[text_length-1] == '/') {
+      bprintf(k, "<%s%s>", bdata(((_kw_t*)k)->tag_name), bdata(((_kw_t*)k)->tag_attributes_validated));
     } else {
-      if(bdata(tag_name)[0] == '/') {
-        if(close_needed_tags()) return;
+      if(bdata(((_kw_t*)k)->tag_name)[0] == '/') {
+        if(close_needed_tags(k)) return;
       } else {
-        kw_push(&tag_stack, (void *)bstrcpy(tag_name));
+        kw_push(&((_kw_t*)k)->tag_stack, (void *)bstrcpy(((_kw_t*)k)->tag_name));
       }
-      bprintf("<%s%s>", bdata(tag_name), bdata(tag_attributes_validated));
+      bprintf(k, "<%s%s>", bdata(((_kw_t*)k)->tag_name), bdata(((_kw_t*)k)->tag_attributes_validated));
     }
   } else {
-    strip_tags(tag_name);
-    bprintf("&lt;%s&gt;", bdata(tag_name));
+    strip_tags(((_kw_t*)k)->tag_name);
+    bprintf(k, "&lt;%s&gt;", bdata(((_kw_t*)k)->tag_name));
   }
 }
 
 KIWI_ACTION(tag_action_1) {
-  bcatcstr(tag_name, text); 
+  bcatcstr(((_kw_t*)k)->tag_name, text); 
 }
 
 void kw_parse(Kw* k) {
-  bprintf("<p>");
+  bprintf(k, "<p>");
   while(kw_low_level_parse(k)) {}
-  bassigncstr(tag_name, "");
-  close_needed_tags();
-  bprintf("</p>");
-  handle_toc();
+  bassigncstr(((_kw_t*)k)->tag_name, "");
+  close_needed_tags(k);
+  bprintf(k, "</p>");
+  handle_toc(k);
 }
 

@@ -2,6 +2,7 @@
 #ifndef __LIST_H
 #define __LIST_H
 #include <stdint.h>
+#include "kiwi.h"
 
 struct node {
   bstring name;
@@ -19,8 +20,8 @@ struct list {
 void kw_list_init(struct list *list);
 struct node *kw_node_alloc();
 struct node *kw_list_append_new(struct list *list);
-int kw_node_free(struct node *item);
-int kw_list_iterate(struct node *item, int (*listfunc)(struct node *));
+int kw_node_free(Kw* k, struct node *item);
+int kw_list_iterate(struct node *item, int (*listfunc)(Kw *, struct node *), Kw* k);
 void kw_list_free(struct list *list);
 void kw_list_print(struct list *list);
 

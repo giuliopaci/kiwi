@@ -35,7 +35,7 @@ struct node *kw_list_append_new(struct list *list) {
   return list->tail;
 }
 
-int kw_node_free(struct node *item) {
+int kw_node_free(Kw* k, struct node *item) {
   if(item == NULL) {
     return 0;
   }
@@ -45,11 +45,11 @@ int kw_node_free(struct node *item) {
   return 1;
 }
 
-int kw_list_iterate(struct node *item, int (*listfunc)(struct node *)) {
+int kw_list_iterate(struct node *item, int (*listfunc)(Kw *, struct node *), Kw* k) {
   struct node *next;
   while(item != NULL) {
     next = item->next;
-    if(listfunc(item) != 1) {
+    if(listfunc(k, item) != 1) {
       return 0;
     }
     item = next;
@@ -61,11 +61,11 @@ void kw_list_free(struct list *list) {
   if(list == NULL || list->head == NULL) {
     return;
   }
-  kw_list_iterate(list->head->next, kw_node_free);
-  if(list->head) kw_node_free(list->head);
+  kw_list_iterate(list->head->next, kw_node_free, NULL);
+  if(list->head) kw_node_free(NULL, list->head);
 }
 
-int node_print(struct node *item) {
+int node_print(Kw* k, struct node *item) {
   printf("%s: %s, %"PRIu64"\n", bdata(item->name), bdata(item->content), item->level);
   return 1;
 }
@@ -74,5 +74,5 @@ void kw_list_print(struct list *list) {
   if(list == NULL) {
     return;
   }
-  kw_list_iterate(list->head->next, node_print);
+  kw_list_iterate(list->head->next, node_print, NULL);
 }

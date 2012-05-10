@@ -4,21 +4,22 @@
 #include "kiwi.h"
 #include "io.h"
 #include "bstrlib.h"
+#include "private-kiwi.h"
 
 // Buffer printf, buffer output until we're ready
-void bprintf(const char *fmt, ...) {
+void bprintf(Kw *k, const char *fmt, ...) {
   int ret;
-  bvformata(ret, output_buffer, fmt, fmt);
+  bvformata(ret, ((_kw_t*)k)->output_buffer, fmt, fmt);
 }
 
 // Read from a string buffer rather than a file when requested by leg code.
 // Could be made faster by reading more than a byte at a time... (up to max_size)
-void handle_input(char *buf, int *result, size_t max_size) {
-  if(input_buffer_pos > input_buffer->slen) {
+void handle_input(Kw* k, char *buf, int *result, size_t max_size) {
+  if(((_kw_t*)k)->input_buffer_pos > ((_kw_t*)k)->input_buffer->slen) {
     *result = 0;
     return;
   }
-  *buf = input_buffer->data[input_buffer_pos++];
+  *buf = ((_kw_t*)k)->input_buffer->data[((_kw_t*)k)->input_buffer_pos++];
   *result = 1;
 }
 
@@ -53,6 +54,6 @@ void stdin_get_contents(bstring buffer) {
 }
 
 // Fill the input buffer from a standard C string
-void str_get_contents(const char *str) {
-  bcatcstr(input_buffer, str);
+void str_get_contents(Kw* k, const char *str) {
+  bcatcstr(((_kw_t*)k)->input_buffer, str);
 }

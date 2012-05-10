@@ -20,7 +20,7 @@ describe WikiParser do
 
   describe "settings" do
     it "should support a base URL" do
-      @parser.set_base_url "/test"
+      @parser.base_url = "/test"
       @parser.html_from_string("[[test]]").should include('href="/test/test"')
     end
 

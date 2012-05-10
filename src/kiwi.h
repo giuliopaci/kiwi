@@ -1,5 +1,6 @@
-#ifndef __COMMON_H
-#define __COMON_H
+#ifndef _KIWI_H
+#define _KIWI_H
+
 #include <stdio.h>
 #include <signal.h>
 #include <time.h>
@@ -7,11 +8,12 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include "bstrlib.h"
+typedef void Kw;
 #include "list.h"
 #include "stack.h"
 
 #define KBYTE 1024
-#define MBYTE KBYTE * 1024
+#define MBYTE ( KBYTE * 1024 )
 
 #define PRESERVE_TEMPLATES 1
 
@@ -26,64 +28,19 @@
 #define TOC_FORCETOC ( 1 << 2 )
 #define TOC_RELOC ( 1 << 3 )
 
-int current_header_level;
-int current_bullet_list_level;
-int current_numbered_list_level;
-int current_definition_list_level;
-
-int start_of_line;
-char protocol[5];
-
-// Images
-int image_attributes;
-bstring image_url;
-bstring image_variables;
-bstring image_link_url;
-bstring image_caption;
-
-// Links
-bstring link_path;
-bstring link_text;
-
-// HTML tags
-bstring tag_name;
-bstring tag_attribute;
-bstring tag_attributes_validated;
-struct list tag_attributes_list;
-stack tag_stack;
-
-// Tables
-int tr_found;
-
-// ToC
-int toc_attributes;
-struct list toc_list;
-
-// Wikitext
-int in_tag;
-bstring tag_content;
-unsigned int tag_content_size;
-
-// Templates
-struct list template_list;
-struct node *template_list_iter;
-int template_noinclude;
-
-// General
-bstring output_buffer;
-bstring input_buffer;
-long input_buffer_pos;
-bstring base_url;
-bstring image_base_url;
-typedef void Kw;
 Kw* kw_init(void);
 void kw_cleanup(Kw* k);
 int kw_low_level_parse(Kw* k);
 void kw_parse(Kw* k);
-void handle_toc(void);
-bstring get_output_buffer();
-char *get_output_buffer_cstr(void);
-bstring get_input_buffer();
-void set_base_url(char *str);
-void set_image_base_url(char *str);
+void kw_set_base_url(Kw* k, char *str);
+void kw_set_image_base_url(Kw* k, char *str);
+
+bstring kw_get_output_buffer(Kw *k);
+char *kw_get_output_buffer_cstr(Kw *k);
+bstring kw_get_input_buffer(Kw* k);
+
+int get_template_count(Kw* k);
+void reset_template_iter(Kw* k);
+struct node *get_next_template(Kw* k);
+
 #endif

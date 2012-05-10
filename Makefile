@@ -1,7 +1,7 @@
 EXAMPLES = bin/parser bin/memtest bin/testlist
 OS=$(shell uname)
 
-HEADERS=src/bstrlib.h  src/content.h  src/io.h  src/kiwi.h  src/list.h  src/parse.h  src/stack.h
+HEADERS=src/bstrlib.h  src/content.h  src/io.h  src/kiwi.h  src/private-kiwi.h  src/list.h  src/parse.h  src/stack.h
 
 CFLAGS = -fPIC -O3 -g3 -Wall -std=gnu99
 all : $(EXAMPLES) libkiwi.so
