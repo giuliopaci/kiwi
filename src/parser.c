@@ -6,10 +6,10 @@ int main(int argc, char **argv) {
    Kw* k = kw_init();
    //file_get_contents(input, "spec/fixtures/cnn.com");
    stdin_get_contents(kw_get_input_buffer(k));
-   if(argc > 0) {
+   if(argc > 1) {
 	   kw_set_base_url(k, argv[1]);
    }
-   if(argc > 1) {
+   if(argc > 2) {
 	   kw_set_image_base_url(k, argv[2]);
    }
    kw_parse(k);
