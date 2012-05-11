@@ -1,0 +1,11 @@
+This release is incompatible with previous releases of kiwi and minor
+changes are required to use it.
+
+1) Several functions' prototypes in the C API have been changed to
+ make them re-entrant. For this reason these functions requires an
+ additional parameter (a pointer to the parser data). Upgrading from a
+ previous release you must identify the relevant functions and change
+ the code accordingly. Special care must be taken for variable number
+ arguments functions (bprintf, append_to_tag_content) as the compiler
+ sometime accept the old-style invocation, leading to a segmentation
+ fault.
