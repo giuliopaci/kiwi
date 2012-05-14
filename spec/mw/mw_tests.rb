@@ -40,8 +40,10 @@ File.open(File.join(File.dirname(__FILE__), 'parserTests.txt')) do |f|
       capturing = false
       input_buffer.gsub! /\r\n/, "\n"
       input_buffer.chomp!
+      parser.base_url = '/wiki/'
       output = parser.html_from_string(input_buffer)
-  
+      parser.reset  
+
       # normalize white space
       output.gsub! /\s+/, ' '
       result_buffer.gsub! /\s+/, ' '

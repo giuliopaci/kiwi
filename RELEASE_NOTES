@@ -9,3 +9,7 @@ changes are required to use it.
  arguments functions (bprintf, append_to_tag_content) as the compiler
  sometime accept the old-style invocation, leading to a segmentation
  fault.
+2) The base_url default is now "/". A "/" is not added to links
+ automatically anymore. This essentially means that if you have
+ previously used set_base_url or base_url, you need to add a "/".  If
+ you are not changing the base_url you do not need to change anything.

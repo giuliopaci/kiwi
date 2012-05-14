@@ -157,7 +157,7 @@ KIWI_ACTION(local_link_action_1) {
   urlencode(((_kw_t*)k)->link_path);
   remove_parentheticals(((_kw_t*)k)->link_text);
   btrimws(((_kw_t*)k)->link_text);
-  append_to_tag_content(k, "<a href=\"%s/%s\">%s</a>", bdata(((_kw_t*)k)->base_url), bdata(((_kw_t*)k)->link_path), bdata(((_kw_t*)k)->link_text));
+  append_to_tag_content(k, "<a href=\"%s%s\">%s</a>", bdata(((_kw_t*)k)->base_url), bdata(((_kw_t*)k)->link_path), bdata(((_kw_t*)k)->link_text));
   btrunc(((_kw_t*)k)->link_path, 0);
   btrunc(((_kw_t*)k)->link_text, 0);
 }

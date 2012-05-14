@@ -244,7 +244,7 @@ describe "Wikitext parser" do
     end
 
     it "should support a base URL to be supplied on the command line or via the API" do
-      parse("[[link]]", "/foofoo").should include("/foofoo/link")
+      parse("[[link]]", "/foofoo/").should include("/foofoo/link")
     end
     # TODO: interwiki links. Or not.
 

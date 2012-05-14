@@ -265,7 +265,7 @@ Kw* kw_init(void) {
   k->input_buffer = bfromcstr("");
   balloc(k->output_buffer, 1 * MBYTE);
 
-  k->base_url = bfromcstr("");
+  k->base_url = bfromcstr("/");
   k->image_base_url = bfromcstr("");
 
   k->tag_name = bfromcstr("");
@@ -302,10 +302,9 @@ void kw_cleanup(Kw* k) {
 
   // Clean up after greg...
   yyparse_free(kk->g);
-  free(k);
+  free(kk);
 }
 
 int kw_low_level_parse(Kw* k) {
-  _kw_t* kk = (_kw_t*)k;
-  return yyparse(kk->g);
+  return yyparse(((_kw_t*)k)->g);
 }
