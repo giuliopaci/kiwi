@@ -17,7 +17,7 @@
 # High-level
 page =  pre_block | wikitext_line | wikitext
 wikitext_line = paragraph | horizontal_line
-wikitext = nowiki | noinclude | html | table_of_contents | template_variable | template | heading | list | formatting | image | link | table | angle_brackets | anything_else | eol { append_to_tag_content(G->data, "%c", '\n'); }
+wikitext = nowiki | noinclude | comment | html | table_of_contents | template_variable | template | heading | list | formatting | image | link | table | angle_brackets | anything_else | eol { append_to_tag_content(G->data, "%c", '\n'); }
 
 # Generally useful rules
 eol = '\r'? '\n' { ((_kw_t*)G->data)->start_of_line = 1; }
@@ -69,6 +69,12 @@ italic = "''"                                                                  {
 pre_block = &{ ((_kw_t*)G->data)->start_of_line }                                                 { bprintf(G->data, "<pre>"); }
   pre_line+                                                                    { bprintf(G->data, "</pre>"); }
 pre_line = ' ' < ( !eol . )* ( eol | eof ) >                                   { bprintf(G->data, "%s", yytext); }
+comment = comment_open < ( !comment_close . )* >                               { RUN_ACTION(comment_action_1); ((_kw_t*)G->data)->start_of_line = 0; }
+  comment_close
+comment_open = comment_open_tag
+comment_close = comment_close_tag
+comment_open_tag = '<!--' 
+comment_close_tag = '-->' | eof
 nowiki = nowiki_open < ( !nowiki_close . )* >                                  { RUN_ACTION(nowiki_action_1); ((_kw_t*)G->data)->start_of_line = 0; }
   nowiki_close
 nowiki_open = nowiki_open_tag | html_pre_open | html_code_open

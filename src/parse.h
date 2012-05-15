@@ -8,6 +8,7 @@ KIWI_ACTION(heading_action_1);
 KIWI_ACTION(heading_action_2);
 KIWI_ACTION(bullet_list_action_1);
 KIWI_ACTION(bullet_action_1);
+KIWI_ACTION(comment_action_1);
 KIWI_ACTION(definition_list_action_1);
 KIWI_ACTION(definition_action_1);
 KIWI_ACTION(numbered_list_action_1);

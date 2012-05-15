@@ -152,6 +152,13 @@ KIWI_ACTION(nowiki_action_1) {
   bdestroy(markup);
 }
 
+KIWI_ACTION(comment_action_1) {
+  bstring markup = bfromcstr(text);
+  strip_tags(markup);
+  //append_to_tag_content(k, "%s", bdata(markup));
+  bdestroy(markup);
+}
+
 KIWI_ACTION(local_link_action_1) {
   strip_html_markup(((_kw_t*)k)->link_path);
   urlencode(((_kw_t*)k)->link_path);
