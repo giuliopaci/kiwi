@@ -17,7 +17,7 @@
 # High-level
 page =  pre_block | wikitext_line | wikitext
 wikitext_line = paragraph | horizontal_line
-wikitext = nowiki | noinclude | comment | html | table_of_contents | template_variable | template | heading | list | formatting | image | link | table | angle_brackets | anything_else | eol { append_to_tag_content(G->data, "%c", '\n'); }
+wikitext = nowiki | noinclude | comment | html | table_of_contents | template_variable | template | heading | list | formatting | image | link | table | angle_brackets | html_hex_code | ampersand | anything_else | eol { append_to_tag_content(G->data, "%c", '\n'); }
 
 # Generally useful rules
 eol = '\r'? '\n' { ((_kw_t*)G->data)->start_of_line = 1; }
@@ -32,7 +32,7 @@ heading_marker = < '=' '='+ >                                                  {
 
 # Paragraph
 paragraph = wikitext eol eol+                                                  { bprintf(G->data, "</p>\n<p>"); }
-horizontal_line = &{ ((_kw_t*)G->data)->start_of_line } "----" "-"*                               { bprintf(G->data, "<hr/>\n"); ((_kw_t*)G->data)->start_of_line = 0; }
+horizontal_line = &{ ((_kw_t*)G->data)->start_of_line } "----" "-"*            { bprintf(G->data, "<hr/>\n"); ((_kw_t*)G->data)->start_of_line = 0; }
 
 # Lists
 list = &{ ((_kw_t*)G->data)->start_of_line } ( bullet_list | numbered_list | definition_list )
@@ -41,19 +41,19 @@ list_text = ( !eol ( < [*#:] > { bprintf(G->data, "%s", yytext); } | wikitext ) 
 # Bullet list
 bullet_list =                                                                  { bprintf(G->data, "<ul>"); }
   bullet_list_entry+                                                           { RUN_ACTION(bullet_list_action_1); }
-bullet_list_entry = bullet space*  list_text ( eol | eof )                     { bprintf(G->data, "</li>"); }
+bullet_list_entry = bullet space*  list_text ( eol | eof )?
 bullet = < '*'+ >                                                              { RUN_ACTION(bullet_action_1); ((_kw_t*)G->data)->start_of_line = 0; }
 
 # Definition list (Indentation)
 definition_list =                                                              { bprintf(G->data, "<dl>"); }
   definition_list_entry+                                                       { RUN_ACTION(definition_list_action_1); }
-definition_list_entry = definition space*  list_text ( eol | eof ) 
+definition_list_entry = definition space*  list_text ( eol | eof )?
 definition = < ':'+ >                                                          { RUN_ACTION(definition_action_1); ((_kw_t*)G->data)->start_of_line = 0; }
 
 # Numbered list
 numbered_list =                                                                { bprintf(G->data, "<ol>"); }
   numbered_list_entry+                                                         { RUN_ACTION(numbered_list_action_1); }
-numbered_list_entry = numbered space* list_text eol?                           { bprintf(G->data, "</li>"); }
+numbered_list_entry = numbered space* list_text ( eol | eof )?
 numbered = < '#'+ >                                                            { RUN_ACTION(numbered_action_1); ((_kw_t*)G->data)->start_of_line = 0; }
 
 # Formatting
@@ -92,7 +92,7 @@ local_link = link_open ':'? namespace? link_path rename? link_close blend      {
 namespace = < ( !':' !link_close . )* > ':'                                    { bformata(((_kw_t*)G->data)->link_path, "%s:", yytext); }
 link_path = < ( !link_close !'|' . )* >                                        { bcatcstr(((_kw_t*)G->data)->link_path, yytext); bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
 rename = '|' < ( !link_close . )* >                                            { btrunc(((_kw_t*)G->data)->link_text, 0); bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
-blend = < ( !space !'=' !"''" ![<[{] !eol !eof . )* >                      { bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
+blend = < ( !space !'=' !"''" ![<[{] !eol !eof . )* >                          { bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
 
 external_link = named_link | unnamed_link | url
 named_link = open_named_link link_url                                          { append_to_tag_content(G->data, "\">");}
@@ -162,7 +162,7 @@ cell_close = &table_delims
 
 # -- start of line cell
 sol_cell = ( sol_cell_complex | sol_cell_simple )
-sol_cell_open = &{((_kw_t*)G->data)->start_of_line} '|' !table_specials                           { RUN_ACTION(sol_cell_open_action_1); }
+sol_cell_open = &{((_kw_t*)G->data)->start_of_line} '|' !table_specials        { RUN_ACTION(sol_cell_open_action_1); }
 sol_cell_complex = ( sol_cell_open cell_attribute_list
   space* '|' !'|' space* ( !table_delims wikitext )* cell_close? )             { RUN_ACTION(cell_close_action_1); }
 sol_cell_simple  = ( sol_cell_open space*                                      { bprintf(G->data, ">"); }
@@ -225,6 +225,10 @@ tag_close_nocap = space* '/'? '>'
 angle_brackets = angle_left | angle_right
 angle_left = '<'                                                               { bprintf(G->data, "&lt;"); ((_kw_t*)G->data)->start_of_line = 0; }
 angle_right = '>'                                                              { bprintf(G->data, "&gt;"); ((_kw_t*)G->data)->start_of_line = 0; }
+
+html_hex_code = ( '&#' [xX] < [0-9a-fA-F]+ > ';' )                             { bprintf(G->data, "&#x%02x;", strtol(yytext, NULL, 16)); ((_kw_t*)G->data)->start_of_line = 0; }
+	      | ( '&#' < [0-9]+ > ';' )                                        { bprintf(G->data, "&#%d;", strtol(yytext, NULL, 10)); ((_kw_t*)G->data)->start_of_line = 0; }
+ampersand = ( '&amp;' | '&' )                                                  { bprintf(G->data, "&amp;"); ((_kw_t*)G->data)->start_of_line = 0; }
 
 # Other stuff
 anything_else = < !eol . >                                                     { ((_kw_t*)G->data)->start_of_line = 0; append_to_tag_content(G->data, "%s", yytext); }

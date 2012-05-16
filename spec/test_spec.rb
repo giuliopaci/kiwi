@@ -104,12 +104,12 @@ describe "Wikitext parser" do
     end
 
     it "should be able to make nested lists" do
-      parse("* test\n*test2\n** nested").should == '<p><ul><li>test</li><li>test2</li><ul><li>nested</li></ul></ul></p>'
+      parse("* test\n*test2\n** nested").should == '<p><ul><li>test</li><li>test2<ul><li>nested</li></ul></li></ul></p>'
     end
 
     it "should handle nested lists that drop more than one level at a time" do
-      parse("* one\n* two\n** A\n** B\n*** a\n*** b\n* three\n* four\n").should include("</ul></ul><li>three")
-      parse("# one\n# two\n## A\n## B\n### a\n### b\n# three\n# four\n").should include("</ol></ol><li>three")
+      parse("* one\n* two\n** A\n** B\n*** a\n*** b\n* three\n* four\n").should include("</ul></li></ul></li><li>three")
+      parse("# one\n# two\n## A\n## B\n### a\n### b\n# three\n# four\n").should include("</ol></li></ol></li><li>three")
     end
 
     it "should be able to make numbered lists" do
@@ -119,7 +119,7 @@ describe "Wikitext parser" do
     end
 
     it "should be able to nest numbered lists" do
-      parse("# test\n#test2\n## nested").should == '<p><ol><li>test</li><li>test2</li><ol><li>nested</li></ol></ol></p>'
+      parse("# test\n#test2\n## nested").should == '<p><ol><li>test</li><li>test2<ol><li>nested</li></ol></li></ol></p>'
     end
 
     it "should be able to make definition lists/indented lists" do
@@ -127,13 +127,13 @@ describe "Wikitext parser" do
     end
 
     it "should be able to nest definition lists" do
-      parse(":text\n::text").strip.should == "<p><dl><dd>text<dl><dd>text</dd></dl></dd></dl></p>"
+      parse(": text\n::text").strip.should == "<p><dl><dd>text<dl><dd>text</dd></dl></dd></dl></p>"
     end
 
     it "should process other wiki text inside of list items" do
       parse("* [[link]]").should == '<p><ul><li><a href="/link">link</a></li></ul></p>'
     end
-
+    
     it "should protect HTML markup just like anywhere else" do
       parse("* <a href=\"wikipedia.org\">wikipedia</a>").should_not include("<a href=")
     end

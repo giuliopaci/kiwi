@@ -95,16 +95,26 @@ KIWI_ACTION(heading_action_2) {
 
 KIWI_ACTION(bullet_list_action_1) {
   while((((_kw_t*)k)->current_bullet_list_level > 0) && ((_kw_t*)k)->current_bullet_list_level--) {
+    bprintf(k, "</li>");
     bprintf(k, "</ul>");
   }
 }
 
 KIWI_ACTION(bullet_action_1) {
-  while((((_kw_t*)k)->current_bullet_list_level < text_length) && ((_kw_t*)k)->current_bullet_list_level++) {
+  while((((_kw_t*)k)->current_bullet_list_level > text_length) && ((_kw_t*)k)->current_bullet_list_level--) {
+      bprintf(k, "</li>");
+      bprintf(k, "</ul>");
+  }
+  if((((_kw_t*)k)->current_bullet_list_level == text_length))
+  {
+      bprintf(k, "</li>");
+  }
+  if((((_kw_t*)k)->current_bullet_list_level == 0) && (text_length > 1)) {
+      bprintf(k, "<li>");
       bprintf(k, "<ul>");
   }
-  while((((_kw_t*)k)->current_bullet_list_level > text_length) && ((_kw_t*)k)->current_bullet_list_level--) {
-      bprintf(k, "</ul>");
+  while((((_kw_t*)k)->current_bullet_list_level < text_length) && ((_kw_t*)k)->current_bullet_list_level++) {
+      bprintf(k, "<ul>");
   }
   ((_kw_t*)k)->current_bullet_list_level = text_length;
   bprintf(k, "<li>");
@@ -118,28 +128,47 @@ KIWI_ACTION(definition_list_action_1) {
 }
 
 KIWI_ACTION(definition_action_1) {
-  while((((_kw_t*)k)->current_definition_list_level < text_length) && ((_kw_t*)k)->current_definition_list_level++) {
+  while((((_kw_t*)k)->current_definition_list_level > text_length) && ((_kw_t*)k)->current_definition_list_level--) {
+      bprintf(k, "</dd>");
+      bprintf(k, "</dl>");
+  }
+  if((((_kw_t*)k)->current_definition_list_level == text_length))
+  {
+      bprintf(k, "</dd>");
+  }
+  if((((_kw_t*)k)->current_definition_list_level == 0) && (text_length > 1)) {
+      bprintf(k, "<dd>");
       bprintf(k, "<dl>");
   }
-  while((((_kw_t*)k)->current_definition_list_level > text_length) && ((_kw_t*)k)->current_definition_list_level--) {
-      bprintf(k, "</dl>");
+  while((((_kw_t*)k)->current_definition_list_level < text_length) && ((_kw_t*)k)->current_definition_list_level++) {
+      bprintf(k, "<dl>");
   }
   ((_kw_t*)k)->current_definition_list_level = text_length;
   bprintf(k, "<dd>");
 }
 
 KIWI_ACTION(numbered_list_action_1) {
-  while((((_kw_t*)k)->current_numbered_list_level > 0) && ((_kw_t*)k)->current_numbered_list_level--) { 
+  while((((_kw_t*)k)->current_numbered_list_level > 0) && ((_kw_t*)k)->current_numbered_list_level--) {
+    bprintf(k, "</li>");
     bprintf(k, "</ol>"); 
   } 
 }
 
 KIWI_ACTION(numbered_action_1) {
-  while((((_kw_t*)k)->current_numbered_list_level < text_length) && ((_kw_t*)k)->current_numbered_list_level++) {
+  while((((_kw_t*)k)->current_numbered_list_level > text_length) && ((_kw_t*)k)->current_numbered_list_level--) {
+      bprintf(k, "</li>");
+      bprintf(k, "</ol>");
+  }
+  if((((_kw_t*)k)->current_numbered_list_level == text_length))
+  {
+      bprintf(k, "</li>");
+  }
+  if((((_kw_t*)k)->current_numbered_list_level == 0) && (text_length > 1)) {
+      bprintf(k, "<li>");
       bprintf(k, "<ol>");
   }
-  while((((_kw_t*)k)->current_numbered_list_level > text_length) && ((_kw_t*)k)->current_numbered_list_level--) {
-      bprintf(k, "</ol>");
+  while((((_kw_t*)k)->current_numbered_list_level < text_length) && ((_kw_t*)k)->current_numbered_list_level++) {
+      bprintf(k, "<ol>");
   }
   ((_kw_t*)k)->current_numbered_list_level = text_length;
   bprintf(k, "<li>");
