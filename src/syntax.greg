@@ -239,7 +239,8 @@ anything_else = < !eol . >                                                     {
 Kw* kw_init(void) {
   _kw_t* k;
   k = (Kw*) malloc(sizeof(_kw_t));
-  k->g = yyparse_new(k);
+  k->g = (void *) calloc(1, sizeof(GREG));
+  ((GREG*)k->g)->data = k;
   k->current_header_level = 0;
   k->start_of_line = 1;
   k->image_attributes = 0;
@@ -311,7 +312,8 @@ void kw_cleanup(Kw* k) {
   kw_list_free(&kk->template_list);
 
   // Clean up after greg...
-  yyparse_free(kk->g);
+  yydeinit(kk->g);
+  free(kk->g);
   free(kk);
 }
 
