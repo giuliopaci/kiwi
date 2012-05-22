@@ -17,7 +17,7 @@
 # High-level
 page =  pre_block | wikitext_line | wikitext
 wikitext_line = paragraph | horizontal_line
-wikitext = nowiki | noinclude | comment | html | table_of_contents | template_variable | template | heading | list | formatting | image | link | table | angle_brackets | html_hex_code | ampersand | anything_else | eol { append_to_tag_content(G->data, "%c", '\n'); }
+wikitext = nowiki | noinclude | comment | html | table_of_contents | template_variable | template | heading | list | formatting | image | link | table | angle_brackets | html_escaped_code | anything_else | eol { append_to_tag_content(G->data, "%c", '\n'); }
 
 # Generally useful rules
 eol = '\r'? '\n' { ((_kw_t*)G->data)->start_of_line = 1; }
@@ -83,7 +83,7 @@ nowiki = nowiki_open < ( !nowiki_close . )* >                                  {
 nowiki_open = nowiki_open_tag | html_pre_open | html_code_open
 nowiki_close = nowiki_close_tag | html_pre_close | html_code_close
 nowiki_open_tag = '<nowiki>' 
-nowiki_close_tag = '</nowiki>' 
+nowiki_close_tag = '</nowiki>'
 html_pre_open = ( '<pre' ( !'>' . )* '>' | '<PRE>' )                           { append_to_tag_content(G->data, "<pre>"); }
 html_pre_close = ( '</pre>' | '</PRE>' )                                       { append_to_tag_content(G->data, "</pre>"); }
 html_code_open = ( '<code' ( !'>' . )* '>' | '<CODE>' )                        { append_to_tag_content(G->data, "<code>"); }
@@ -233,6 +233,8 @@ angle_right = '>'                                                              {
 html_hex_code = ( '&#' [xX] < [0-9a-fA-F]+ > ';' )                             { bprintf(G->data, "&#x%02x;", strtol(yytext, NULL, 16)); ((_kw_t*)G->data)->start_of_line = 0; }
 	      | ( '&#' < [0-9]+ > ';' )                                        { bprintf(G->data, "&#%d;", strtol(yytext, NULL, 10)); ((_kw_t*)G->data)->start_of_line = 0; }
 ampersand = ( '&amp;' | '&' )                                                  { bprintf(G->data, "&amp;"); ((_kw_t*)G->data)->start_of_line = 0; }
+html_escaped_code = '&nbsp;'                                                   { bprintf(G->data, "&nbsp;"); ((_kw_t*)G->data)->start_of_line = 0; }
+		  | html_hex_code | ampersand 
 
 # Other stuff
 anything_else = < !eol . >                                                     { ((_kw_t*)G->data)->start_of_line = 0; append_to_tag_content(G->data, "%s", yytext); }
