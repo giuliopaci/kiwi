@@ -66,14 +66,17 @@ italic = "''"                                                                  {
   ( !"''" wikitext )* "''"                                                     { append_to_tag_content(G->data, "</i>"); }
 
 # pre-formatted blocks
-pre_block = &{ ((_kw_t*)G->data)->start_of_line }                                                 { bprintf(G->data, "<pre>"); }
-  pre_line+                                                                    { bprintf(G->data, "</pre>"); }
-pre_line = ' ' < ( !eol . )* ( eol | eof ) >                                   { bprintf(G->data, "%s", yytext); }
-comment = comment_open < ( !comment_close . )* >                               { RUN_ACTION(comment_action_1); }
+pre_block = &{ ((_kw_t*)G->data)->start_of_line }                              { bprintf(G->data, "<pre>"); }
+  pre_line+                                                                    { bprintf(G->data, "</pre> "); }
+pre_line = ' ' ( comment* < ( !eol !comment. )+ >                              { bprintf(G->data, "%s", yytext); }
+	 	 comment*
+	 )*
+	 < ( eol | eof ) >                                   		       { bprintf(G->data, "%s", yytext); }
+comment = comment_open ( !comment_close . )*                                   { RUN_ACTION(comment_action_1); }
   comment_close
 comment_open = comment_open_tag
 comment_close = comment_close_tag
-comment_open_tag = '<!--' 
+comment_open_tag = '<!--'
 comment_close_tag = '-->' | eof
 nowiki = nowiki_open < ( !nowiki_close . )* >                                  { RUN_ACTION(nowiki_action_1); ((_kw_t*)G->data)->start_of_line = 0; }
   nowiki_close
@@ -191,7 +194,8 @@ simple_header = &{((_kw_t*)G->data)->start_of_line} '!' space*                  
 # Templates
 template = &{!((_kw_t*)G->data)->template_noinclude} template_open space* template_name template_content? template_close
 template_open = '{{'                                                           { kw_list_append_new(&((_kw_t*)G->data)->template_list); }
-template_name = < ( !template_close !'|' . )* >                                { RUN_ACTION(template_name_action_1); }
+template_name = ( comment* < ( !comment !template_close !'|' . )+ >            { RUN_ACTION(template_name_action_1); }
+                  comment* )*
 template_content = '|' space* < ( !template_close template_nested? . )+ >      { RUN_ACTION(template_content_action_1); }
 template_close = '}}'                                                          { RUN_ACTION(template_close_action_1); ((_kw_t*)G->data)->start_of_line = 0; }
 template_variable = < '{{{' ( ! '}}}' !eol !eof . )* '}}}' >                   { bprintf(G->data, "%s", yytext); }
