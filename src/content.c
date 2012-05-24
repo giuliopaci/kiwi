@@ -376,8 +376,8 @@ bool close_needed_tags(Kw* k) {
       } else {
         bprintf(k, "</%s>", bdata(this_tag));
         bdestroy(this_tag);
+        bdestroy(tmp);
       }
-      bdestroy(tmp);
     }
     if(((_kw_t*)k)->tag_name && blength(((_kw_t*)k)->tag_name) != 0) bprintf(k, "<%s>", bdata(((_kw_t*)k)->tag_name)); 
     return true;
