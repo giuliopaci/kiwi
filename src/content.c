@@ -247,53 +247,66 @@ struct hashed_tag {
   bool self_closing;     // Is the tag an inherently self-closing tag?
 };
 
+// Hash function that guarantee that all allowed tags will receive unique hash
+static uint64_t tag_search_hash(const char *str) {
+        uint64_t hash = 4;
+
+        while(*str!='\0')
+        {
+                int c = *str;
+                hash = ((hash << 2) + hash) + c;
+                str++;
+        }
+        return hash;
+}
+
 // This data structure is a pre-hashed table of allowed HTML tags
 // and each tag's corresponding allowed attributes.  These are also used for
 // validating attributes on wikitext equivalents of some of these tags
 // (e.g. tables).  The hashing algorithm is Dan Bernstein's % 512.
 static const struct hashed_tag tags_hash[512] = {
-  [7]   { "b",          { "id", "name" }, 2, false },
-  [14]  { "i",          { "id", "name" }, 2, false },
-  [21]  { "p",          { "id", "name" }, 2, false },
-  [24]  { "s",          { "id", "name" }, 2, false },
-  [31]  { "hr",         { "id", "name" }, 2, true },
-  [47]  { "ins",        { "id", "name" }, 2, false },
-  [60]  { "abbr",       { "id", "name" }, 2, false },
-  [72]  { "div",        { "id", "name" }, 2, true },
-  [94]  { "small",      { "id", "name" }, 2, false },
-  [108] { "pre",        { "id", "name" }, 2, false },
-  [119] { "span",       { "id", "name" }, 2, true },
-  [128] { "code",       { "id", "name" }, 2, false },
-  [134] { "center",     { "id", "name" }, 2, false },
-  [141] { "table",      { "id", "name", "cellspacing", "cellpadding", "border", "style", "width" }, 7, false },
-  [154] { "li",         { "id", "name" }, 2, false },
-  [158] { "blockquote", { "id", "name" }, 2, false },
-  [211] { "caption",    { "id", "name", "align", "style" }, 4, false },
-  [252] { "font",       { "id", "name" }, 2, false },
-  [256] { "ol",         { "id", "name" }, 2, false },
-  [266] { "cite",       { "id", "name" }, 2, false },
-  [345] { "br",         { "id", "name" }, 2, true },
-  [386] { "strong",     { "id", "name" }, 2, false },
-  [397] { "dd",         { "id", "name" }, 2, false },
-  [399] { "sub",        { "id", "name" }, 2, false },
-  [405] { "dl",         { "id", "name" }, 2, false },
-  [407] { "strike",     { "id", "name" }, 2, false },
-  [413] { "dt",         { "id", "name" }, 2, false },
-  [413] { "sup",        { "id", "name" }, 2, false },
-  [413] { "td",         { "id", "name", "align", "colspan", "style", "width" }, 6, false },
-  [417] { "th",         { "id", "name", "align", "colspan", "scope", "style", "width" }, 7, false },
-  [427] { "tr",         { "id", "name", "border", "style" }, 4, false },
-  [429] { "tt",         { "id", "name" }, 2, false },
-  [439] { "big",        { "id", "name" }, 2, false },
-  [439] { "em",         { "id", "name" }, 2, false },
-  [442] { "del",        { "id", "name" }, 2, false },
-  [454] { "ul",         { "id", "name" }, 2, false },
-  [478] { "h1",         { "id", "name", "style" }, 3, false },
-  [479] { "h2",         { "id", "name", "style" }, 3, false },
-  [480] { "h3",         { "id", "name", "style" }, 3, false },
-  [481] { "h4",         { "id", "name", "style" }, 3, false },
-  [482] { "h5",         { "id", "name", "style" }, 3, false },
-  [483] { "h6",         { "id", "name", "style" }, 3, false }
+  [118]   { "b",          { "id", "name" }, 2, false },
+  [125]  { "i",	      { "id", "name" }, 2, false },
+  [132]  { "p",	      { "id", "name" }, 2, false },
+  [135]  { "s",	      { "id", "name" }, 2, false },
+  [222]  { "hr",	      { "id", "name" }, 2, true },
+  [206]  { "ins",	      { "id", "name" }, 2, false },
+  [271]  { "abbr",	      { "id", "name" }, 2, false },
+  [59]  { "div",	      { "id", "name" }, 2, true },
+  [209]  { "small",      { "id", "name" }, 2, false },
+  [387] { "pre",	     { "id", "name" }, 2, false },
+  [302] { "span",	     { "id", "name" }, 2, true },
+  [331] { "code",	     { "id", "name" }, 2, false },
+  [173] { "center",     { "id", "name" }, 2, false },
+  [376] { "table",	     { "id", "name", "cellspacing", "cellpadding", "border", "style", "width" }, 7, false },
+  [233] { "li",	     { "id", "name" }, 2, false },
+  [289] { "blockquote", { "id", "name" }, 2, false },
+  [50] { "caption",    { "id", "name", "align", "style" }, 4, false },
+  [259] { "font",	     { "id", "name" }, 2, false },
+  [251] { "ol",	     { "id", "name" }, 2, false },
+  [261] { "cite",	     { "id", "name" }, 2, false },
+  [192] { "br",	     { "id", "name" }, 2, true },
+  [53] { "strong",     { "id", "name" }, 2, false },
+  [188] { "dd",	     { "id", "name" }, 2, false },
+  [474] { "sub",	     { "id", "name" }, 2, false },
+  [196] { "dl",	     { "id", "name" }, 2, false },
+  [398] { "strike",     { "id", "name" }, 2, false },
+  [204] { "dt",	     { "id", "name" }, 2, false },
+  [488] { "sup",	     { "id", "name" }, 2, false },
+  [268] { "td",	     { "id", "name", "align", "colspan", "style", "width" }, 6, false },
+  [272] { "th",	     { "id", "name", "align", "colspan", "scope", "style", "width" }, 7, false },
+  [282] { "tr",	     { "id", "name", "border", "style" }, 4, false },
+  [284] { "tt",	     { "id", "name" }, 2, false },
+  [506] { "big",	     { "id", "name" }, 2, false },
+  [202] { "em",	     { "id", "name" }, 2, false },
+  [29] { "del",	     { "id", "name" }, 2, false },
+  [281] { "ul",	     { "id", "name" }, 2, false },
+  [157] { "h1",	       { "id", "name", "style" }, 3, false },
+  [158] { "h2",	       { "id", "name", "style" }, 3, false },
+  [159] { "h3",	       { "id", "name", "style" }, 3, false },
+  [160] { "h4",	       { "id", "name", "style" }, 3, false },
+  [161] { "h5",	       { "id", "name", "style" }, 3, false },
+  [162] { "h6",	       { "id", "name", "style" }, 3, false }
 };
 
 // Validate whether or not a specific HTML tag is allowed.
@@ -312,7 +325,7 @@ bool valid_html_tag(char *html_tag, size_t orig_len) {
     return false;
   }
 
-  int hashed_key = hash(tag) % 512;
+  int hashed_key = tag_search_hash(tag) % 512;
   if(tags_hash[hashed_key].key && !strncmp(tag, tags_hash[hashed_key].key, len)) {
     return true;
   } 
@@ -321,7 +334,7 @@ bool valid_html_tag(char *html_tag, size_t orig_len) {
 }
 
 bool tag_self_closing(char *tag) {
-  int hashed_key = hash(tag) % 512;
+  int hashed_key = tag_search_hash(tag) % 512;
   int len = strlen(tag);
 
   return tags_hash[hashed_key].key && 
@@ -337,7 +350,7 @@ int validate_tag_attributes(Kw* k, struct node *item) {
   }
 
   btolower(item->name);
-  int hashed_key = hash(bdata(((_kw_t*)k)->tag_name)) % 512;
+  int hashed_key = tag_search_hash(bdata(((_kw_t*)k)->tag_name)) % 512;
 
   if(!tags_hash[hashed_key].key || (tags_hash[hashed_key].size < 1)) {
     return 1;
