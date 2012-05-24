@@ -24,7 +24,7 @@ void *kw_stack_grow(stack *s) {
 
 int kw_push(stack *s, void *item) {
   if(!s) {
-    fprintf(stderr, "Bad stack passed to kw_kw_kw_pop()\n");
+    fprintf(stderr, "Bad stack passed to kw_pop()\n");
 	return -1;
   }
   if(!item) return -1;
