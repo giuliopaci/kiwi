@@ -84,9 +84,10 @@ nowiki_open = nowiki_open_tag | html_pre_open | html_code_open
 nowiki_close = nowiki_close_tag | html_pre_close | html_code_close
 nowiki_open_tag = '<nowiki>' 
 nowiki_close_tag = '</nowiki>'
-html_pre_open = ( '<pre' ( !'>' . )* '>' | '<PRE>' )                           { append_to_tag_content(G->data, "<pre>"); }
+
+html_pre_open = ( '<pre' ( tag_attribute | !'>' . )* '>' | '<PRE>' )          { append_to_tag_content(G->data, "<pre>"); }
 html_pre_close = ( '</pre>' | '</PRE>' )                                       { append_to_tag_content(G->data, "</pre>"); }
-html_code_open = ( '<code' ( !'>' . )* '>' | '<CODE>' )                        { append_to_tag_content(G->data, "<code>"); }
+html_code_open = ( '<code' ( tag_attribute | !'>' . )* '>' | '<CODE>' )                        { append_to_tag_content(G->data, "<code>"); }
 html_code_close = ( '</code>' | '</CODE>' )                                    { append_to_tag_content(G->data, "</code>"); }
 
 # Links
@@ -218,12 +219,22 @@ html = tag_open tag tag_attributes_list? tag_close
 tag_open = '<'                                                                 { init_tag_vars(G->data); }
 tag = < '/'? ( !tag_close_nocap !space . )+ >                                  { RUN_ACTION(tag_action_1); }
 tag_attributes_list = ( space ( tag_attribute | tag_junk ) )+
-tag_attribute = tag_attribute_name '=' tag_attribute_value
+ttag_attribute = tag_attribute_name '=' tag_attribute_value
 tag_attribute_name = < ( !'=' . )+ >                                           { RUN_ACTION(tag_attribute_name_action_1); }
 tag_attribute_value = '"' < ( !tag_close_nocap !['"] . )+ > '"'                { RUN_ACTION(tag_attribute_value_action_1); }
 tag_junk = < ( !tag_close_nocap . )+ >
 tag_close = < tag_close_nocap >                                                { RUN_ACTION(tag_close_action_1); ((_kw_t*)G->data)->start_of_line = 0; }
 tag_close_nocap = space* '/'? '>'
+
+tag_attribute = < ( [-_a-zA-Z0-9]+ ':')? [-_a-zA-Z0-9]+ >                          {  RUN_ACTION(tag_attribute_name_action_1); }
+		     ( space | eol)* '=' ( space | eol)* 
+		      ( ( '"'
+		     < ( ( !'\\' !'"' . ) | ( '\\' . ) )* >                    {  RUN_ACTION(tag_attribute_value_action_1); }
+		      '"' )
+		      | ( [']
+		     < [^<']* >                                                {  RUN_ACTION(tag_attribute_value_action_1); }
+		      [']
+		      ) )
 
 # -- loose angle brackets
 angle_brackets = angle_left | angle_right
