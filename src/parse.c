@@ -369,6 +369,19 @@ KIWI_ACTION(tag_close_action_1) {
         if(close_needed_tags(k)) return;
       } else {
         kw_push(&((_kw_t*)k)->tag_stack, (void *)bstrcpy(((_kw_t*)k)->tag_name));
+        bstring last_tag = kw_peek(&((_kw_t*)k)->tag_stack, 1);
+        if(last_tag != NULL)
+        {
+	  if(biseqcstr(((_kw_t*)k)->tag_name, "li"))
+          {
+            if(bstrcmp(last_tag, ((_kw_t*)k)->tag_name) == 0)
+            {
+	      close_tag(k, "li");
+	      last_tag = kw_pop(&((_kw_t*)k)->tag_stack);
+	      bdestroy(last_tag);
+            }
+          }
+        }
       }
       bprintf(k, "<%s%s>", bdata(((_kw_t*)k)->tag_name), bdata(((_kw_t*)k)->tag_attributes_validated));
     }
@@ -379,7 +392,7 @@ KIWI_ACTION(tag_close_action_1) {
 }
 
 KIWI_ACTION(tag_action_1) {
-  bcatcstr(((_kw_t*)k)->tag_name, text); 
+  bcatcstr(((_kw_t*)k)->tag_name, text);
 }
 
 void kw_parse(Kw* k) {
