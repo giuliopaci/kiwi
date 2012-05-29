@@ -2,10 +2,14 @@ Kiwi
 ======
 
 Kiwi is a C implementation of the vast majority of MediaWiki's
-wikitext syntax.  It currently takes input on stdin and presents
-output on stdout, and there is a Ruby FFI module for direct library
-use as well.  The major advantages of this implementation are
-intended to be speed and memory footprint.
+wikitext syntax. Nevertheless Kiwi fails to pass 90% of the official
+MediaWiki parser tests (using a relaxed test, where some differences
+are ignored) as most corner cases are treated differently by the two
+parsers.
+It currently takes input on stdin and presents output on stdout, and
+there is a Ruby FFI module for direct library use as well.  The major
+advantages of this implementation are intended to be speed and memory
+footprint.
 
 At the moment a 100 line wikitext file with fairly complex markup
 can be parsed in 5-6ms on a one year old Apple MacBook Pro.
