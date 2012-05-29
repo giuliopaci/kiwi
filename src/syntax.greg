@@ -85,39 +85,42 @@ nowiki_close = nowiki_close_tag | html_pre_close | html_code_close
 nowiki_open_tag = '<nowiki>' 
 nowiki_close_tag = '</nowiki>'
 
-html_pre_open = ( '<pre' ( tag_attribute | !'>' . )* '>' | '<PRE>' )          { append_to_tag_content(G->data, "<pre>"); }
+html_pre_open = ( '<pre' ( tag_attribute | !'>' . )* '>' | '<PRE>' )           { append_to_tag_content(G->data, "<pre>"); }
 html_pre_close = ( '</pre>' | '</PRE>' )                                       { append_to_tag_content(G->data, "</pre>"); }
-html_code_open = ( '<code' ( tag_attribute | !'>' . )* '>' | '<CODE>' )                        { append_to_tag_content(G->data, "<code>"); }
+html_code_open = ( '<code' ( tag_attribute | !'>' . )* '>' | '<CODE>' )        { append_to_tag_content(G->data, "<code>"); }
 html_code_close = ( '</code>' | '</CODE>' )                                    { append_to_tag_content(G->data, "</code>"); }
 
 # Links
-link = ( local_link | external_link )                                          { ((_kw_t*)G->data)->start_of_line = 0; }
-local_link = link_open ':'? namespace? link_path rename? link_close blend       { RUN_ACTION(local_link_action_1); }
+link = ( '[[' { bprintf(G->data, "[["); }
+	local_link | nolink_noopen | local_link | external_link )              { ((_kw_t*)G->data)->start_of_line = 0; }
+local_link = link_open ':'? namespace? link_path rename? link_close blend      { RUN_ACTION(local_link_action_1); }
 namespace = < ( !':' !link_close . )* > ':'                                    { bformata(((_kw_t*)G->data)->link_path, "%s:", yytext); }
 link_path = < ( !link_close !'|' . )* >                                        { bcatcstr(((_kw_t*)G->data)->link_path, yytext); bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
 rename = '|' < ( !link_close . )* >                                            { btrunc(((_kw_t*)G->data)->link_text, 0); bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
 # FIXME
 # blend should match lowercase characters (in a language dependant way)
-# blend = < ( !space !'=' !"''" ![<[{] !eol !eof . )* >                         { bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
+# blend = < ( !space !'=' !"''" ![<[{] !eol !eof . )* >                        { bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
 blend = < [a-z]* >                                                             { bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
 
 external_link = named_link | unnamed_link | url
 named_link = open_named_link link_url                                          { append_to_tag_content(G->data, "\">");}
   ' '+ link_name + space* close_named_link
-open_named_link = '[' !'[' !'javascript:'                                           { append_to_tag_content(G->data, "<a href=\""); } 
+open_named_link = '[' !'[' !'javascript:'                                      { append_to_tag_content(G->data, "<a href=\""); } 
 close_named_link = ']'                                                         { append_to_tag_content(G->data, "</a>"); }
 
 link_url = < ( !' ' !']' . )+ >                                                { append_to_tag_content(G->data, "%s", yytext); }
 link_name = < ( !']' . )+ >                                                    { append_to_tag_content(G->data, "%s", yytext); }
 
-unnamed_link = '[' !'[' !'javascript:' < ( !']' . )* > ']'                          { append_to_tag_content(G->data, "<a href=\"%s\">%s</a>", yytext, yytext);}
+unnamed_link = '[' !'[' !'javascript:' < ( !']' . )* > ']'                     { append_to_tag_content(G->data, "<a href=\"%s\">%s</a>", yytext, yytext);}
 url = protocol '://' < ( !eol !' ' . )* >                                      { append_to_tag_content(G->data, "<a href=\"%s://%s\">%s://%s</a>", ((_kw_t*)G->data)->protocol, yytext, ((_kw_t*)G->data)->protocol, yytext); }
 protocol =  < ( 'http' | 'https' | 'ftp' ) >                                   { strcpy(((_kw_t*)G->data)->protocol, yytext); } 
 link_open = '[[' !'['
 link_close = ']]'
+nolink_noopen = '[[[' !'['						       { bprintf(G->data, "[[["); }
 
 # Images
-image = open_image { btrunc(((_kw_t*)G->data)->image_variables, 0); } file_indicator arguments? image_caption? close_image { RUN_ACTION(image_action_1); }
+image = open_image                                                             { btrunc(((_kw_t*)G->data)->image_variables, 0); }
+        file_indicator arguments? image_caption? close_image                   { RUN_ACTION(image_action_1); }
 
 open_image = '[[' space*
 
@@ -188,11 +191,11 @@ table_close = '|}'
 # -- headers
 table_headers =                                                                { if(!((_kw_t*)G->data)->tr_found) bprintf(G->data, "<tr>"); }
   ( complex_header | simple_header )+                                          { if(!((_kw_t*)G->data)->tr_found) bprintf(G->data, "</tr>"); }
-complex_header = &{((_kw_t*)G->data)->start_of_line} '!'                                          { RUN_ACTION(complex_header_action_1); }
+complex_header = &{((_kw_t*)G->data)->start_of_line} '!'                       { RUN_ACTION(complex_header_action_1); }
   ( cell_attribute_list* space* '|'                                            { RUN_ACTION(complex_header_action_2); }
   space* ( !table_delims !eol wikitext )* ( &table_delims | eol ))             { bprintf(G->data, "</th>"); }
 
-simple_header = &{((_kw_t*)G->data)->start_of_line} '!' space*                                    { bprintf(G->data, "<th>"); }
+simple_header = &{((_kw_t*)G->data)->start_of_line} '!' space*                 { bprintf(G->data, "<th>"); }
   ( !eol !table_delims wikitext )+ ( eol | &table_delims )                     { bprintf(G->data, "</th>");}
 
 # Templates
@@ -231,7 +234,7 @@ tag_junk = < ( !tag_close_nocap . )+ >
 tag_close = < tag_close_nocap >                                                { RUN_ACTION(tag_close_action_1); ((_kw_t*)G->data)->start_of_line = 0; }
 tag_close_nocap = space* '/'? '>'
 
-tag_attribute = < ( [-_a-zA-Z0-9]+ ':')? [-_a-zA-Z0-9]+ >                          {  RUN_ACTION(tag_attribute_name_action_1); }
+tag_attribute = < ( [-_a-zA-Z0-9]+ ':')? [-_a-zA-Z0-9]+ >                      {  RUN_ACTION(tag_attribute_name_action_1); }
 		     ( space | eol)* '=' ( space | eol)* 
 		      ( ( '"'
 		     < ( ( !'\\' !'"' . ) | ( '\\' . ) )* >                    {  RUN_ACTION(tag_attribute_value_action_1); }
@@ -241,7 +244,7 @@ tag_attribute = < ( [-_a-zA-Z0-9]+ ':')? [-_a-zA-Z0-9]+ >                       
 		      [']
 		      )
 		      | 
-		     ( < '#' [A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9]+ > )             {  RUN_ACTION(tag_attribute_value_action_1); }
+		     ( < '#' [A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9]+ > )            {  RUN_ACTION(tag_attribute_value_action_1); }
 		      )
 # FIXME
 # MediaWiki also accepts [a-zA-Z0-9!#$%&()*,\\-.\\/:;<>?@[\\]^_`{|}~]+ has possible tag value

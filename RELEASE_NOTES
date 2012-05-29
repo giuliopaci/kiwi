@@ -13,3 +13,6 @@ changes are required to use it.
  automatically anymore. This essentially means that if you have
  previously used set_base_url or base_url, you need to add a "/".  If
  you are not changing the base_url you do not need to change anything.
+3) Single aposthrophes are not blended anymore in links (i.e.,
+ [[link]]'s will not include "'s" in the anchor text), according to
+ MediaWiki behaviour.

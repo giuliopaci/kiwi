@@ -1484,6 +1484,15 @@ Link with suffix
 !! end
 
 !! test
+Link with 4 brackets
+!! input
+[[[[Main Page]]]
+!! result
+<p>[[<a href="/wiki/Main_Page">Main Page</a>]
+</p>
+!! end
+
+!! test
 Link with 3 brackets
 !! input
 [[[main page]]]
