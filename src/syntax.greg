@@ -104,16 +104,16 @@ blend = < [a-z]* >                                                             {
 external_link = named_link | unnamed_link | url
 named_link = open_named_link link_url                                          { append_to_tag_content(G->data, "\">");}
   ' '+ link_name + space* close_named_link
-open_named_link = '[' !'javascript:'                                           { append_to_tag_content(G->data, "<a href=\""); } 
+open_named_link = '[' !'[' !'javascript:'                                           { append_to_tag_content(G->data, "<a href=\""); } 
 close_named_link = ']'                                                         { append_to_tag_content(G->data, "</a>"); }
 
 link_url = < ( !' ' !']' . )+ >                                                { append_to_tag_content(G->data, "%s", yytext); }
 link_name = < ( !']' . )+ >                                                    { append_to_tag_content(G->data, "%s", yytext); }
 
-unnamed_link = '[' !'javascript:' < ( !']' . )* > ']'                          { append_to_tag_content(G->data, "<a href=\"%s\">%s</a>", yytext, yytext);}
+unnamed_link = '[' !'[' !'javascript:' < ( !']' . )* > ']'                          { append_to_tag_content(G->data, "<a href=\"%s\">%s</a>", yytext, yytext);}
 url = protocol '://' < ( !eol !' ' . )* >                                      { append_to_tag_content(G->data, "<a href=\"%s://%s\">%s://%s</a>", ((_kw_t*)G->data)->protocol, yytext, ((_kw_t*)G->data)->protocol, yytext); }
 protocol =  < ( 'http' | 'https' | 'ftp' ) >                                   { strcpy(((_kw_t*)G->data)->protocol, yytext); } 
-link_open = '[['
+link_open = '[[' !'['
 link_close = ']]'
 
 # Images
