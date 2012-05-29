@@ -92,11 +92,13 @@ html_code_close = ( '</code>' | '</CODE>' )                                    {
 
 # Links
 link = ( local_link | external_link )                                          { ((_kw_t*)G->data)->start_of_line = 0; }
-local_link = link_open ':'? namespace? link_path rename? link_close blend      { RUN_ACTION(local_link_action_1); }
+local_link = link_open ':'? namespace? link_path rename? link_close blend       { RUN_ACTION(local_link_action_1); }
 namespace = < ( !':' !link_close . )* > ':'                                    { bformata(((_kw_t*)G->data)->link_path, "%s:", yytext); }
 link_path = < ( !link_close !'|' . )* >                                        { bcatcstr(((_kw_t*)G->data)->link_path, yytext); bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
 rename = '|' < ( !link_close . )* >                                            { btrunc(((_kw_t*)G->data)->link_text, 0); bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
-blend = < ( !space !'=' !"''" ![<[{] !eol !eof . )* >                          { bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
+#blend should match lowercase characters (in a language dependant way)
+#blend = < ( !space !'=' !"''" ![<[{] !eol !eof . )* >                         { bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
+blend = < [a-z]* >                                                             { bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
 
 external_link = named_link | unnamed_link | url
 named_link = open_named_link link_url                                          { append_to_tag_content(G->data, "\">");}
