@@ -96,8 +96,9 @@ local_link = link_open ':'? namespace? link_path rename? link_close blend       
 namespace = < ( !':' !link_close . )* > ':'                                    { bformata(((_kw_t*)G->data)->link_path, "%s:", yytext); }
 link_path = < ( !link_close !'|' . )* >                                        { bcatcstr(((_kw_t*)G->data)->link_path, yytext); bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
 rename = '|' < ( !link_close . )* >                                            { btrunc(((_kw_t*)G->data)->link_text, 0); bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
-#blend should match lowercase characters (in a language dependant way)
-#blend = < ( !space !'=' !"''" ![<[{] !eol !eof . )* >                         { bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
+# FIXME
+# blend should match lowercase characters (in a language dependant way)
+# blend = < ( !space !'=' !"''" ![<[{] !eol !eof . )* >                         { bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
 blend = < [a-z]* >                                                             { bcatcstr(((_kw_t*)G->data)->link_text, yytext); }
 
 external_link = named_link | unnamed_link | url
@@ -217,6 +218,8 @@ forcetoc = '__FORCETOC__'                                                      {
 toc = '__TOC__'                                                                { ((_kw_t*)G->data)->toc_attributes |= TOC_RELOC; bprintf(G->data, "__TOC__"); // pass-through for later }
 
 # HTML markup
+# FIXME
+# tag_attributes with errors are not ignored
 html = tag_open tag tag_attributes_list? tag_close
 tag_open = '<'                                                                 { init_tag_vars(G->data); }
 tag = < '/'? ( !tag_close_nocap !space . )+ >                                  { RUN_ACTION(tag_action_1); }
@@ -236,7 +239,12 @@ tag_attribute = < ( [-_a-zA-Z0-9]+ ':')? [-_a-zA-Z0-9]+ >                       
 		      | ( [']
 		     < [^<']* >                                                {  RUN_ACTION(tag_attribute_value_action_1); }
 		      [']
-		      ) )
+		      )
+		      | 
+		     ( < '#' [A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9]+ > )             {  RUN_ACTION(tag_attribute_value_action_1); }
+		      )
+# FIXME
+# MediaWiki also accepts [a-zA-Z0-9!#$%&()*,\\-.\\/:;<>?@[\\]^_`{|}~]+ has possible tag value
 
 # -- loose angle brackets
 angle_brackets = angle_left | angle_right
