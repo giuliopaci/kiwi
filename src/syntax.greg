@@ -35,26 +35,13 @@ paragraph = wikitext eol eol+                                                  {
 horizontal_line = &{ ((_kw_t*)G->data)->start_of_line } "----" "-"*            { bprintf(G->data, "<hr/>\n"); ((_kw_t*)G->data)->start_of_line = 0; }
 
 # Lists
-list = &{ ((_kw_t*)G->data)->start_of_line } ( bullet_list | numbered_list | definition_list )
-list_text = ( !eol ( < [*#:] > { bprintf(G->data, "%s", yytext); } | wikitext ) )*
+list = &{ ((_kw_t*)G->data)->start_of_line } ( mixed_list )
+list_text = ( !eol ( < [*#;:] > { bprintf(G->data, "%s", yytext); } | wikitext ) )*
 
-# Bullet list
-bullet_list =                                                                  { bprintf(G->data, "<ul>"); }
-  bullet_list_entry+                                                           { RUN_ACTION(bullet_list_action_1); }
-bullet_list_entry = bullet space*  list_text ( eol | eof )?
-bullet = < '*'+ >                                                              { RUN_ACTION(bullet_action_1); ((_kw_t*)G->data)->start_of_line = 0; }
-
-# Definition list (Indentation)
-definition_list =                                                              { bprintf(G->data, "<dl>"); }
-  definition_list_entry+                                                       { RUN_ACTION(definition_list_action_1); }
-definition_list_entry = definition space*  list_text ( eol | eof )?
-definition = < ':'+ >                                                          { RUN_ACTION(definition_action_1); ((_kw_t*)G->data)->start_of_line = 0; }
-
-# Numbered list
-numbered_list =                                                                { bprintf(G->data, "<ol>"); }
-  numbered_list_entry+                                                         { RUN_ACTION(numbered_list_action_1); }
-numbered_list_entry = numbered space* list_text ( eol | eof )?
-numbered = < '#'+ >                                                            { RUN_ACTION(numbered_action_1); ((_kw_t*)G->data)->start_of_line = 0; }
+# Mixed list
+mixed_list = mixed_list_entry+                                                 { RUN_ACTION(mixed_list_action_1); }
+mixed_list_entry = mixed_bullet space* list_text ( eol | eof )?
+mixed_bullet = < [*#:;]+ >                                                      { RUN_ACTION(mixed_bullet_action_1); ((_kw_t*)G->data)->start_of_line = 0; }
 
 # Formatting
 formatting = bold_italic | bold | italic
@@ -281,9 +268,6 @@ Kw* kw_init(void) {
   k->tr_found = 0;
 
   k->current_header_level = 0;
-  k->current_bullet_list_level = 0;
-  k->current_numbered_list_level = 0;
-  k->current_definition_list_level = 0;
 
   memset(k->protocol, 0, 5);
   k->template_noinclude = 0;
@@ -301,6 +285,8 @@ Kw* kw_init(void) {
 
   k->link_path = bfromcstr("");
   k->link_text = bfromcstr("");
+
+  k->current_mixed_list_level = bfromcstr("");
 
   k->output_buffer = bfromcstr("");
   k->input_buffer = bfromcstr("");
@@ -333,6 +319,7 @@ void kw_cleanup(Kw* k) {
   bdestroy(kk->tag_name);
   bdestroy(kk->tag_attribute);
   bdestroy(kk->tag_attributes_validated);
+  bdestroy(kk->current_mixed_list_level);
 
   kw_stack_free(&kk->tag_stack);
 

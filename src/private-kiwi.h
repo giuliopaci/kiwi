@@ -3,9 +3,8 @@
 typedef struct _kw
 {
 	int current_header_level;
-	int current_bullet_list_level;
-	int current_numbered_list_level;
-	int current_definition_list_level;
+
+	bstring current_mixed_list_level;
 
 	int start_of_line;
 	char protocol[5];

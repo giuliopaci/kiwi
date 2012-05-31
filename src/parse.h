@@ -6,13 +6,9 @@
 #define KIWI_ACTION(name) void name(Kw* k, int text_length, char *text)
 KIWI_ACTION(heading_action_1);
 KIWI_ACTION(heading_action_2);
-KIWI_ACTION(bullet_list_action_1);
-KIWI_ACTION(bullet_action_1);
+KIWI_ACTION(mixed_list_action_1);
+KIWI_ACTION(mixed_bullet_action_1);
 KIWI_ACTION(comment_action_1);
-KIWI_ACTION(definition_list_action_1);
-KIWI_ACTION(definition_action_1);
-KIWI_ACTION(numbered_list_action_1);
-KIWI_ACTION(numbered_action_1);
 KIWI_ACTION(nowiki_action_1);
 KIWI_ACTION(local_link_action_1);
 KIWI_ACTION(image_action_1);
