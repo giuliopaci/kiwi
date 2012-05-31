@@ -51,8 +51,8 @@ File.open(File.join(File.dirname(__FILE__), 'parserTests.txt')) do |f|
       result_buffer.gsub! /<\/p>$/, ''
       
       # do not care about spaces around some tags
-      output.gsub!        /\s*<(\/?(li|dd|center|caption))>\s*/, '<\\1>'
-      result_buffer.gsub! /\s*<(\/?(li|dd|center|caption))>\s*/, '<\\1>'
+      output.gsub!        /\s*<(\/?(li|dd|dt|ol|ul|center|caption))>\s*/, '<\\1>'
+      result_buffer.gsub! /\s*<(\/?(li|dd|dt|ol|ul|center|caption))>\s*/, '<\\1>'
 
       # normalize white space
       output.gsub! /\s+/, ' '
