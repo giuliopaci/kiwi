@@ -2,7 +2,7 @@ EXAMPLES = bin/parser bin/memtest bin/testlist
 OS=$(shell uname)
 
 CFLAGS = -fPIC -O3 -g3 -Wall -std=gnu99
-all : $(EXAMPLES)
+all : $(EXAMPLES) libkiwi.so
 
 %.leg.tmp.c: %.leg
 	leg -o $(@) $(<)
