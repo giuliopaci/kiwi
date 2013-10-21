@@ -33,3 +33,8 @@ Simplest Ruby Example with Templates
       end
     end
     puts wikitext
+
+pegleg documentation
+====================
+
+see http://piumarta.com/software/peg/peg.1.html for help with the syntax

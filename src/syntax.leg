@@ -1,3 +1,4 @@
+# see http://piumarta.com/software/peg/peg.1.html for help with the syntax
 %{
 #include "bstrlib.h"
 #include "list.h"
@@ -31,7 +32,7 @@ heading_marker = < '=' '='+ >                                                  {
 
 # Paragraph
 paragraph = wikitext eol eol+                                                  { bprintf("</p>\n<p>"); }
-horizontal_line = &{ start_of_line } "----" "-"*                               { bprintf("<hr/>\n"); start_of_line = 0; }
+horizontal_line = &{ start_of_line } "----" "-"*                               { bprintf("<hr />\n"); start_of_line = 0; }
 
 # Lists
 list = &{ start_of_line } ( bullet_list | numbered_list | definition_list )
@@ -293,10 +294,10 @@ void cleanup(void) {
   kw_list_free(&template_list);
 
   // Clean up after leg...
-  if(yybuf) free(yybuf);
-  if(yytext) free(yytext);
-  if(yythunks) free(yythunks);
-  if(yyvals) free(yyvals);
+  if(yyctx->buf) free(yyctx->buf);
+  if(yyctx->text) free(yyctx->text);
+  if(yyctx->thunks) free(yyctx->thunks);
+  if(yyctx->vals) free(yyctx->vals);
 
-  yybuflen = 0;
+  yyctx->buflen = 0;
 }

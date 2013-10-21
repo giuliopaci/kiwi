@@ -84,7 +84,7 @@ describe "Wikitext parser" do
     end
 
     it "should be able to make a horizontal line" do
-      parse("----").strip.should =~ /<hr\/>/
+      parse("----").strip.should =~ /<hr \/>/
     end
 
     it "should not get confused with colons in the middle of a line" do
